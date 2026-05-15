@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinanceOS — Company Finance Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0d1b2a;--accent:#3b82f6;--accent2:#1d4ed8;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--bg:#f0f4f8;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--sidebar-w:240px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+h1,h2,h3,h4{font-family:'Syne',sans-serif}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--navy);display:flex;flex-direction:column;z-index:100;overflow:hidden;transition:transform .25s}
+.sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo h2{color:#fff;font-size:17px;font-weight:700;letter-spacing:-.02em}
+.sidebar-logo .vtag{display:inline-block;background:#3b82f6;color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;margin-top:4px;font-weight:600;letter-spacing:.04em;font-family:'DM Sans',sans-serif}
+.sidebar-nav{padding:12px 10px;flex:1;overflow-y:auto}
+.nav-sec{font-size:10px;font-weight:600;color:rgba(255,255,255,.25);letter-spacing:.08em;text-transform:uppercase;padding:10px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:rgba(255,255,255,.55);font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:2px;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--accent);color:#fff}
+.ni{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5}
+.sidebar-footer{padding:12px 10px;border-top:1px solid rgba(255,255,255,.08)}
+.main{margin-left:var(--sidebar-w);min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 26px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:14.5px;font-weight:600}
+.topbar-date{font-size:11px;color:var(--muted);margin-top:1px}
+.content{padding:22px 26px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.bg-green{background:#d1fae5;color:#065f46}.bg-blue{background:#dbeafe;color:#1e40af}.bg-amber{background:#fef3c7;color:#92400e}.bg-red{background:#fee2e2;color:#991b1b}.bg-gray{background:#f1f5f9;color:#475569}.bg-purple{background:#ede9fe;color:#5b21b6}
+.card{background:#fff;border-radius:12px;border:1px solid var(--border)}
+.mc{padding:16px 18px;border-radius:12px;border:1px solid}
+.mc-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.mc-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.mc-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.mc-income{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#6ee7b7}
+.mc-expense{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5}
+.mc-balance{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#93c5fd}
+.mc-pending{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d}
+.mc-gst{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#c4b5fd}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px}
+.chart-card{padding:16px 18px}
+.chart-title{font-size:12.5px;font-weight:600;margin-bottom:12px}
+.filter-bar{display:flex;gap:7px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--border);align-items:center;background:#fafbfc}
+.filter-bar input,.filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;background:#fff;height:32px}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent)}
+.totals-bar{display:flex;gap:16px;padding:9px 14px;background:#f8fafc;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.tc{display:flex;align-items:center;gap:6px;font-size:12px}
+.tc .lbl{color:var(--muted);font-weight:500}
+.tc .val{font-weight:700;font-family:'Syne',sans-serif;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#f8fafc;padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
+th.sc{cursor:pointer}
+th.sc:hover{color:var(--accent)}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+tr.over td{background:#fff8f8}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;line-height:1;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+.btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}.btn-outline:hover{background:#f8fafc}
+.btn-danger{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}.btn-danger:hover{background:#fecaca}
+.btn-green{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}.btn-green:hover{background:#a7f3d0}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent}.btn-ghost:hover{background:#f1f5f9;color:var(--text)}
+.btn-sm{padding:4px 9px;font-size:11px;border-radius:6px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto}
+.modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-header h3{font-size:16px;font-weight:700}
+.modal-body{padding:16px 20px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg textarea{resize:vertical;min-height:54px}
+.fg .err{color:#dc2626;font-size:11px}
+.fg input[readonly]{background:#f8fafc;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.full{grid-column:1/-1}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.gst-toggle{display:flex;gap:0;background:#f1f5f9;border-radius:8px;padding:3px;max-width:260px}
+.gst-toggle label{flex:1;text-align:center;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);transition:all .15s;user-select:none}
+.gst-toggle input{display:none}
+.gst-toggle input:checked+label{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.gst-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;margin:8px 0}
+.gst-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.gst-calc{background:#e0f2fe;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 15px;border-radius:10px;font-size:12.5px;font-weight:500;z-index:300;display:flex;align-items:center;gap:7px;animation:su .22s ease;max-width:280px}
+.toast.error{background:#ef4444}.toast.success{background:#10b981}.toast.warn{background:#f59e0b}
+@keyframes su{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.pager{display:flex;align-items:center;gap:4px;padding:10px 14px;justify-content:flex-end;border-top:1px solid var(--border)}
+.pb{padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .1s}
+.pb.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pb:hover:not(.act):not(:disabled){background:#f8fafc}
+.pb:disabled{opacity:.35;cursor:default}
+.overlay-c{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:250;display:flex;align-items:center;justify-content:center}
+.confirm-box{background:#fff;border-radius:12px;padding:22px;width:300px}
+.confirm-box h4{font-size:15px;font-weight:600;margin-bottom:5px}
+.confirm-box p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.login-card{background:#fff;border-radius:16px;padding:30px;width:350px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.login-card h2{font-size:21px;font-weight:700;margin-bottom:3px}
+.login-card .sub{font-size:12.5px;color:var(--muted);margin-bottom:20px}
+.c-income{color:#059669;font-weight:600}.c-expense{color:#dc2626;font-weight:600}.c-payment{color:#7c3aed;font-weight:600}
+.link-a{background:none;border:none;color:var(--accent);cursor:pointer;font-size:11.5px;text-decoration:underline;padding:0;font-family:'DM Sans',sans-serif}
+.info-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#0369a1;margin-top:8px;line-height:1.6}
+.alert-strip{background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.alert-text{font-size:12.5px;color:#991b1b;font-weight:500}
+.tip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px}
+.tip-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 15px}
+.tip-card .ti{font-size:18px;margin-bottom:6px}
+.tip-card h4{font-size:12.5px;font-weight:600;margin-bottom:4px}
+.tip-card p{font-size:11.5px;color:var(--muted);line-height:1.55}
+.due-over{color:#991b1b;font-size:11px;font-weight:500}.due-warn{color:#92400e;font-size:11px;font-weight:500}.due-ok{color:var(--muted);font-size:11px}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}.ovl.open{display:block}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--text);align-items:center}
+@media(max-width:900px){
+  .sidebar{transform:translateX(-240px)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}
+  .charts-row{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.gst-row{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 14px}.content{padding:14px}.tip-grid{grid-template-columns:1fr 1fr}.hamburger{display:flex!important}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo,useCallback}=React;
+
+const CATEGORIES=['Sales','Commission','Salary','Rent','Raw Material','Utilities','Tax','Maintenance','Transport','Other'];
+const PAY_METHODS=['Cash','Bank Transfer','UPI','Cheque'];
+const TYPES=['Income','Expense','Payment'];
+const STATUSES=['Paid','Pending','Cancelled'];
+const GST_TYPES=['GST Bill','Non-GST Bill'];
+const GST_RATES=[5,12,18,28];
+const CREDS={username:'accountant',password:'finance@123'};
+
+const genId=()=>'TXN'+Math.random().toString(36).substr(2,6).toUpperCase();
+const today=()=>new Date().toISOString().split('T')[0];
+const fmtINR=n=>'₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});
+const daysLeft=d=>Math.ceil((new Date(d)-new Date(today()))/(1000*60*60*24));
+
+const SAMPLE=[
+  {id:'TXN001',date:'2025-11-05',type:'Income',category:'Sales',vendor:'ABC Textiles Pvt Ltd',description:'November sales collection',amount:338800,paymentMethod:'Bank Transfer',referenceNo:'RTGS202511001',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-11-05T10:30:00',gstType:'GST Bill',gstRate:18,taxableAmount:285000,gstAmount:53800,vendorGstin:'33AABCT1234F1ZK',dueDate:''},
+  {id:'TXN002',date:'2025-11-08',type:'Expense',category:'Salary',vendor:'Staff Payroll',description:'November staff salaries (18 employees)',amount:95000,paymentMethod:'Bank Transfer',referenceNo:'',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-11-08T09:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:95000,gstAmount:0,vendorGstin:'',dueDate:''},
+  {id:'TXN003',date:'2025-11-10',type:'Expense',category:'Rent',vendor:'Sri Murugan Properties',description:'Factory rent Nov 2025',amount:33040,paymentMethod:'Cheque',referenceNo:'CHQ-4521',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-11-10T11:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:28000,gstAmount:5040,vendorGstin:'33AABSM5678G2ZL',dueDate:''},
+  {id:'TXN004',date:'2025-11-15',type:'Expense',category:'Raw Material',vendor:'Kovai Cotton Mills',description:'Cotton bales purchase 200 kg',amount:167560,paymentMethod:'Bank Transfer',referenceNo:'NEFT202511015',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-11-15T14:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:142000,gstAmount:25560,vendorGstin:'33AABKC9012H3ZM',dueDate:''},
+  {id:'TXN005',date:'2025-11-20',type:'Expense',category:'Utilities',vendor:'TNEB Tiruppur',description:'Electricity bill November',amount:21830,paymentMethod:'UPI',referenceNo:'UPI20251120',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-11-20T10:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:18500,gstAmount:3330,vendorGstin:'',dueDate:''},
+  {id:'TXN006',date:'2025-11-25',type:'Income',category:'Commission',vendor:'Star Fashion Agents',description:'Commission for order facilitation Nov',amount:18000,paymentMethod:'UPI',referenceNo:'UPI20251125',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-11-25T14:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:15254,gstAmount:2746,vendorGstin:'33AABSF1122J1ZA',dueDate:''},
+  {id:'TXN007',date:'2025-12-03',type:'Income',category:'Sales',vendor:'XYZ Garments',description:'December advance payment',amount:212400,paymentMethod:'Bank Transfer',referenceNo:'RTGS202512003',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-12-03T09:30:00',gstType:'GST Bill',gstRate:18,taxableAmount:180000,gstAmount:32400,vendorGstin:'33AABXG2233K2ZB',dueDate:''},
+  {id:'TXN008',date:'2025-12-10',type:'Expense',category:'Salary',vendor:'Staff Payroll',description:'December staff salaries',amount:95000,paymentMethod:'Bank Transfer',referenceNo:'',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-12-10T09:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:95000,gstAmount:0,vendorGstin:'',dueDate:''},
+  {id:'TXN009',date:'2025-12-12',type:'Expense',category:'Maintenance',vendor:'Tech Machines Co',description:'Weaving machine servicing',amount:25960,paymentMethod:'Cash',referenceNo:'RCPT-2512',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2025-12-12T15:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:22000,gstAmount:3960,vendorGstin:'33AABTM3344L3ZC',dueDate:''},
+  {id:'TXN010',date:'2025-12-15',type:'Payment',category:'Raw Material',vendor:'Kovai Cotton Mills',description:'Outstanding balance Dec payment',amount:58000,paymentMethod:'Cheque',referenceNo:'CHQ-4590',proofLink:'',status:'Pending',addedBy:'accountant',timestamp:'2025-12-15T11:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:58000,gstAmount:0,vendorGstin:'33AABKC9012H3ZM',dueDate:'2026-05-25'},
+  {id:'TXN011',date:'2026-01-05',type:'Income',category:'Sales',vendor:'Lakshmi Textiles',description:'January order 500 sarees',amount:377600,paymentMethod:'Bank Transfer',referenceNo:'RTGS202601005',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-01-05T10:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:320000,gstAmount:57600,vendorGstin:'33AABLT4455M4ZD',dueDate:''},
+  {id:'TXN012',date:'2026-01-08',type:'Expense',category:'Commission',vendor:'Delhi Trade Agents',description:'Commission Delhi market sourcing',amount:14160,paymentMethod:'Bank Transfer',referenceNo:'NEFT20260108',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-01-08T10:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:12000,gstAmount:2160,vendorGstin:'07AABDT5566N5ZE',dueDate:''},
+  {id:'TXN013',date:'2026-01-10',type:'Expense',category:'Salary',vendor:'Staff Payroll',description:'January staff salaries',amount:98000,paymentMethod:'Bank Transfer',referenceNo:'',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-01-10T09:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:98000,gstAmount:0,vendorGstin:'',dueDate:''},
+  {id:'TXN014',date:'2026-01-15',type:'Expense',category:'Tax',vendor:'GST Department',description:'GST payment Q3 2025-26',amount:35000,paymentMethod:'Bank Transfer',referenceNo:'GST20260115',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-01-15T12:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:35000,gstAmount:0,vendorGstin:'',dueDate:''},
+  {id:'TXN015',date:'2026-01-20',type:'Expense',category:'Raw Material',vendor:'Erode Yarn Traders',description:'Polyester yarn 500 kg',amount:103250,paymentMethod:'UPI',referenceNo:'UPI20260120',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-01-20T14:30:00',gstType:'GST Bill',gstRate:18,taxableAmount:87500,gstAmount:15750,vendorGstin:'33AABEYT6677P6ZF',dueDate:''},
+  {id:'TXN016',date:'2026-02-04',type:'Income',category:'Sales',vendor:'Fashion World Exports',description:'Export order 2000 pieces T-shirts',amount:637200,paymentMethod:'Bank Transfer',referenceNo:'RTGS202602004',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-02-04T10:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:540000,gstAmount:97200,vendorGstin:'27AABFW7788Q7ZG',dueDate:''},
+  {id:'TXN017',date:'2026-02-10',type:'Expense',category:'Salary',vendor:'Staff Payroll',description:'February staff salaries',amount:98000,paymentMethod:'Bank Transfer',referenceNo:'',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-02-10T09:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:98000,gstAmount:0,vendorGstin:'',dueDate:''},
+  {id:'TXN018',date:'2026-02-15',type:'Expense',category:'Transport',vendor:'Sri Krishna Logistics',description:'Goods delivery Tirupur to Chennai',amount:13125,paymentMethod:'Cash',referenceNo:'',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-02-15T16:00:00',gstType:'GST Bill',gstRate:5,taxableAmount:12500,gstAmount:625,vendorGstin:'33AABSKL8899R8ZH',dueDate:''},
+  {id:'TXN019',date:'2026-02-20',type:'Income',category:'Commission',vendor:'Coimbatore Brokers Ltd',description:'Brokerage commission fabric deal',amount:8850,paymentMethod:'Cash',referenceNo:'',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-02-20T11:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:7500,gstAmount:1350,vendorGstin:'33AABCBL9900S9ZI',dueDate:''},
+  {id:'TXN020',date:'2026-03-02',type:'Income',category:'Sales',vendor:'Raja Readymade Stores',description:'March season order hosiery goods',amount:206500,paymentMethod:'Bank Transfer',referenceNo:'NEFT202603002',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-03-02T10:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:175000,gstAmount:31500,vendorGstin:'33AABRRS0011T0ZJ',dueDate:''},
+  {id:'TXN021',date:'2026-03-10',type:'Expense',category:'Rent',vendor:'Sri Murugan Properties',description:'Factory rent March 2026',amount:35400,paymentMethod:'Cheque',referenceNo:'CHQ-4625',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-03-10T11:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:30000,gstAmount:5400,vendorGstin:'33AABSM5678G2ZL',dueDate:''},
+  {id:'TXN022',date:'2026-03-25',type:'Payment',category:'Tax',vendor:'Income Tax Dept',description:'Advance tax Q4 FY 2025-26',amount:45000,paymentMethod:'Bank Transfer',referenceNo:'IT20260325',proofLink:'',status:'Pending',addedBy:'accountant',timestamp:'2026-03-25T12:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:45000,gstAmount:0,vendorGstin:'',dueDate:'2026-05-18'},
+  {id:'TXN023',date:'2026-04-05',type:'Income',category:'Sales',vendor:'MRS Exports',description:'April quarter opening knit fabric',amount:483800,paymentMethod:'Bank Transfer',referenceNo:'RTGS202604005',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-04-05T10:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:410000,gstAmount:73800,vendorGstin:'33AABME1122U1ZK',dueDate:''},
+  {id:'TXN024',date:'2026-04-12',type:'Expense',category:'Raw Material',vendor:'Sasi Cotton Co',description:'Cotton bales Q1 FY2027',amount:247800,paymentMethod:'Bank Transfer',referenceNo:'RTGS202604012',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-04-12T13:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:210000,gstAmount:37800,vendorGstin:'33AABSC2233V2ZL',dueDate:''},
+  {id:'TXN025',date:'2026-04-18',type:'Expense',category:'Utilities',vendor:'TNEB Tiruppur',description:'Electricity bill April 2026',amount:24780,paymentMethod:'UPI',referenceNo:'UPI20260418',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-04-18T10:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:21000,gstAmount:3780,vendorGstin:'',dueDate:''},
+  {id:'TXN026',date:'2026-04-22',type:'Expense',category:'Commission',vendor:'Mumbai Fashion Brokers',description:'Commission paid export deal sourcing',amount:23600,paymentMethod:'Bank Transfer',referenceNo:'NEFT20260422',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-04-22T13:00:00',gstType:'GST Bill',gstRate:18,taxableAmount:20000,gstAmount:3600,vendorGstin:'27AABMFB3344W3ZM',dueDate:''},
+  {id:'TXN027',date:'2026-05-01',type:'Income',category:'Other',vendor:'Machinery Resale',description:'Old loom machine sold scrap',amount:55000,paymentMethod:'Cash',referenceNo:'',proofLink:'',status:'Paid',addedBy:'accountant',timestamp:'2026-05-01T11:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:55000,gstAmount:0,vendorGstin:'',dueDate:''},
+  {id:'TXN028',date:'2026-05-08',type:'Expense',category:'Salary',vendor:'Staff Payroll',description:'May staff salaries',amount:100000,paymentMethod:'Bank Transfer',referenceNo:'',proofLink:'',status:'Pending',addedBy:'accountant',timestamp:'2026-05-08T09:00:00',gstType:'Non-GST Bill',gstRate:0,taxableAmount:100000,gstAmount:0,vendorGstin:'',dueDate:'2026-05-15'},
+];
+
+/* Chart helpers */
+function BarChart({data}){
+  const ref=useRef(),ch=useRef();
+  useEffect(()=>{
+    if(!ref.current) return;
+    if(ch.current) ch.current.destroy();
+    ch.current=new Chart(ref.current,{type:'bar',data:{labels:data.labels,datasets:[
+      {label:'Income',data:data.income,backgroundColor:'rgba(16,185,129,.8)',borderRadius:5,borderSkipped:false},
+      {label:'Expense',data:data.expense,backgroundColor:'rgba(239,68,68,.7)',borderRadius:5,borderSkipped:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:10},boxWidth:10,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'DM Sans',size:10},callback:v=>'₹'+(v/1000).toFixed(0)+'K'}}}}});
+    return()=>{if(ch.current) ch.current.destroy()};
+  },[JSON.stringify(data)]);
+  return <canvas ref={ref}/>;
+}
+function DChart({data}){
+  const ref=useRef(),ch=useRef();
+  useEffect(()=>{
+    if(!ref.current||!data.labels.length) return;
+    if(ch.current) ch.current.destroy();
+    ch.current=new Chart(ref.current,{type:'doughnut',data:{labels:data.labels,datasets:[{data:data.values,backgroundColor:['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#64748b'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:10},boxWidth:9,padding:7}},tooltip:{callbacks:{label:c=>' ₹'+Number(c.raw).toLocaleString('en-IN')}}}}});
+    return()=>{if(ch.current) ch.current.destroy()};
+  },[JSON.stringify(data)]);
+  return <canvas ref={ref}/>;
+}
+
+/* Badges */
+const TB=({type})=><span className={`badge ${type==='Income'?'bg-green':type==='Expense'?'bg-red':'bg-purple'}`}>{type}</span>;
+const SB=({s})=><span className={`badge ${s==='Paid'?'bg-green':s==='Pending'?'bg-amber':'bg-gray'}`}>{s}</span>;
+const GB=({g})=><span className={`badge ${g==='GST Bill'?'bg-blue':'bg-gray'}`}>{g==='GST Bill'?'GST':'Non-GST'}</span>;
+
+function DueLabel({d,s}){
+  if(!d||s==='Paid'||s==='Cancelled') return <span style={{color:'var(--muted)',fontSize:11}}>—</span>;
+  const dl=daysLeft(d);
+  if(dl<0) return <span className="due-over">⚠ {Math.abs(dl)}d over</span>;
+  if(dl<=5) return <span className="due-warn">⏳ {dl}d left</span>;
+  return <span className="due-ok">{d}</span>;
+}
+
+/* Login */
+function LoginModal({onLogin,onClose}){
+  const [u,su]=useState('');const [p,sp]=useState('');const [err,se]=useState('');
+  const go=()=>{ if(u===CREDS.username&&p===CREDS.password) onLogin(u); else se('Invalid credentials'); };
+  return(
+    <div className="overlay-c" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="login-card">
+        <h2>Accountant Login</h2><p className="sub">Enter credentials to manage transactions.</p>
+        <div className="fg" style={{marginBottom:10}}><label>Username</label><input value={u} onChange={e=>su(e.target.value)} placeholder="accountant" onKeyDown={e=>e.key==='Enter'&&go()}/></div>
+        <div className="fg" style={{marginBottom:14}}><label>Password</label><input type="password" value={p} onChange={e=>sp(e.target.value)} placeholder="••••••••" onKeyDown={e=>e.key==='Enter'&&go()}/></div>
+        {err&&<div style={{color:'#dc2626',fontSize:12,background:'#fee2e2',padding:'7px 11px',borderRadius:6,marginBottom:10}}>{err}</div>}
+        <button className="btn btn-primary" style={{width:'100%',justifyContent:'center',padding:'9px 0'}} onClick={go}>Login</button>
+        <div className="info-box"><strong>Demo:</strong> username <code>accountant</code> / password <code>finance@123</code></div>
+        <button className="btn btn-outline" style={{width:'100%',justifyContent:'center',marginTop:9}} onClick={onClose}>Continue as Public Viewer</button>
+      </div>
+    </div>
+  );
+}
+
+/* Transaction Modal */
+function TxModal({tx,onSave,onClose}){
+  const [f,sf]=useState({
+    date:tx?.date||today(),type:tx?.type||'Expense',category:tx?.category||'Other',
+    vendor:tx?.vendor||'',description:tx?.description||'',
+    paymentMethod:tx?.paymentMethod||'Bank Transfer',referenceNo:tx?.referenceNo||'',
+    proofLink:tx?.proofLink||'',status:tx?.status||'Paid',dueDate:tx?.dueDate||'',
+    gstType:tx?.gstType||'Non-GST Bill',gstRate:tx?.gstRate||18,
+    taxableAmount:tx?.taxableAmount||'',gstAmount:tx?.gstAmount||0,
+    amount:tx?.amount||'',vendorGstin:tx?.vendorGstin||''
+  });
+  const [errs,se]=useState({});
+  const set=(k,v)=>sf(p=>({...p,[k]:v}));
+
+  const recalc=(ta,rate,gtype)=>{
+    if(gtype==='GST Bill'&&ta&&Number(ta)>0){
+      const ga=Math.round(Number(ta)*rate/100);
+      return{gstAmount:ga,amount:Number(ta)+ga};
+    }
+    return{gstAmount:0,amount:Number(ta)||0};
+  };
+  const onTA=v=>{ const r=recalc(v,f.gstRate,f.gstType); sf(p=>({...p,taxableAmount:v,gstAmount:r.gstAmount,amount:r.amount})); };
+  const onRate=v=>{ const r=recalc(f.taxableAmount,Number(v),f.gstType); sf(p=>({...p,gstRate:Number(v),gstAmount:r.gstAmount,amount:r.amount})); };
+  const onGT=v=>{ const r=recalc(f.taxableAmount,f.gstRate,v); sf(p=>({...p,gstType:v,gstAmount:r.gstAmount,amount:r.amount})); };
+
+  const validate=()=>{
+    const e={};
+    if(!f.date) e.date='Required';
+    if(!f.vendor.trim()) e.vendor='Required';
+    if(!f.taxableAmount||Number(f.taxableAmount)<=0) e.ta='Must be positive';
+    se(e); return !Object.keys(e).length;
+  };
+  const submit=()=>{ if(validate()) onSave({...f,taxableAmount:Number(f.taxableAmount),gstAmount:Number(f.gstAmount),amount:Number(f.amount)}); };
+  const isGst=f.gstType==='GST Bill';
+
+  return(
+    <div className="modal-bg" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-header"><h3>{tx?'Edit Transaction':'New Transaction'}</h3><button className="btn btn-outline btn-sm" onClick={onClose}>✕</button></div>
+        <div className="modal-body">
+          <div className="form-grid">
+            <div className="fg"><label>Date *</label><input type="date" value={f.date} onChange={e=>set('date',e.target.value)}/>{errs.date&&<span className="err">{errs.date}</span>}</div>
+            <div className="fg"><label>Type *</label><select value={f.type} onChange={e=>set('type',e.target.value)}>{TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+            <div className="fg"><label>Category</label><select value={f.category} onChange={e=>set('category',e.target.value)}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
+            <div className="fg"><label>Status</label><select value={f.status} onChange={e=>set('status',e.target.value)}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+            {f.status==='Pending'&&<div className="fg full"><label>Due Date</label><input type="date" value={f.dueDate} onChange={e=>set('dueDate',e.target.value)}/></div>}
+            <div className="fg full"><label>Vendor / Party Name *</label><input value={f.vendor} onChange={e=>set('vendor',e.target.value)} placeholder="e.g. Kovai Cotton Mills"/>{errs.vendor&&<span className="err">{errs.vendor}</span>}</div>
+            <div className="fg full"><label>Vendor GSTIN (optional)</label><input value={f.vendorGstin} onChange={e=>set('vendorGstin',e.target.value)} placeholder="33AABCT1234F1ZK" style={{fontFamily:'monospace',letterSpacing:'.04em'}}/></div>
+          </div>
+
+          {/* Bill type toggle */}
+          <div style={{margin:'12px 0 4px'}}>
+            <div style={{fontSize:10.5,fontWeight:600,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.04em',marginBottom:6}}>Bill Type</div>
+            <div className="gst-toggle">
+              {GST_TYPES.map(g=>(
+                <React.Fragment key={g}>
+                  <input type="radio" name="gt" id={`gt${g}`} value={g} checked={f.gstType===g} onChange={()=>onGT(g)}/>
+                  <label htmlFor={`gt${g}`}>{g}</label>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* Amount section */}
+          <div className="gst-box">
+            <div className="gst-row">
+              <div className="fg">
+                <label>{isGst?'Base Amount (excl. GST) ₹ *':'Amount ₹ *'}</label>
+                <input type="number" min="1" value={f.taxableAmount} onChange={e=>onTA(e.target.value)} placeholder="0"/>
+                {errs.ta&&<span className="err">{errs.ta}</span>}
+              </div>
+              {isGst&&<div className="fg"><label>GST Rate</label><select value={f.gstRate} onChange={e=>onRate(e.target.value)}>{GST_RATES.map(r=><option key={r} value={r}>{r}%</option>)}</select></div>}
+              {isGst&&<div className="fg"><label>GST Amount ₹</label><input readOnly value={f.gstAmount||''} placeholder="Auto"/></div>}
+            </div>
+            {isGst&&Number(f.taxableAmount)>0&&(
+              <div className="gst-calc">
+                <span style={{color:'#0369a1',fontSize:12}}>Base: {fmtINR(f.taxableAmount)} + GST @{f.gstRate}%: {fmtINR(f.gstAmount)}</span>
+                <span style={{fontWeight:700,color:'#0c4a6e',fontFamily:'Syne',fontSize:14}}>Total: {fmtINR(f.amount)}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="form-grid" style={{marginTop:10}}>
+            <div className="fg"><label>Payment Method</label><select value={f.paymentMethod} onChange={e=>set('paymentMethod',e.target.value)}>{PAY_METHODS.map(m=><option key={m}>{m}</option>)}</select></div>
+            <div className="fg"><label>Reference No.</label><input value={f.referenceNo} onChange={e=>set('referenceNo',e.target.value)} placeholder="NEFT / Cheque / UPI ref"/></div>
+            <div className="fg full"><label>Payment Proof Link (Google Drive)</label><input value={f.proofLink} onChange={e=>set('proofLink',e.target.value)} placeholder="Paste shareable Drive link"/></div>
+            <div className="fg full"><label>Description / Remarks</label><textarea value={f.description} onChange={e=>set('description',e.target.value)} placeholder="Additional notes..."/></div>
+          </div>
+
+          <div className="info-box">💡 Upload receipt to Google Drive → Share → Copy link → paste above in Proof Link field.</div>
+          <div className="form-actions">
+            <button className="btn btn-outline" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" onClick={submit}>{tx?'Update Transaction':'Add Transaction'}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Dashboard */
+function Dashboard({txns,onViewPending}){
+  const m=useMemo(()=>{
+    const ok=t=>t.status!=='Cancelled';
+    const income=txns.filter(t=>t.type==='Income'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    const expense=txns.filter(t=>t.type==='Expense'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    const pmt=txns.filter(t=>t.type==='Payment'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    const pend=txns.filter(t=>t.status==='Pending');
+    const over=pend.filter(t=>t.dueDate&&daysLeft(t.dueDate)<0);
+    const gstCol=txns.filter(t=>t.type==='Income'&&ok(t)&&t.gstType==='GST Bill').reduce((s,t)=>s+t.gstAmount,0);
+    const gstPd=txns.filter(t=>t.type==='Expense'&&ok(t)&&t.gstType==='GST Bill').reduce((s,t)=>s+t.gstAmount,0);
+    const commInc=txns.filter(t=>t.category==='Commission'&&t.type==='Income'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    const commExp=txns.filter(t=>t.category==='Commission'&&t.type==='Expense'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    return{income,expense,pmt,balance:income-expense-pmt,pendCnt:pend.length,pendAmt:pend.reduce((s,t)=>s+t.amount,0),overCnt:over.length,overAmt:over.reduce((s,t)=>s+t.amount,0),gstCol,gstPd,gstNet:gstCol-gstPd,commInc,commExp};
+  },[txns]);
+
+  const barData=useMemo(()=>{
+    const now=new Date();
+    const months=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return{label:d.toLocaleString('default',{month:'short',year:'2-digit'}),key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};});
+    return{labels:months.map(m=>m.label),income:months.map(m=>txns.filter(t=>t.type==='Income'&&t.date.startsWith(m.key)&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0)),expense:months.map(m=>txns.filter(t=>t.type==='Expense'&&t.date.startsWith(m.key)&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0))};
+  },[txns]);
+
+  const pieData=useMemo(()=>{
+    const cats={};
+    txns.filter(t=>t.type==='Expense'&&t.status!=='Cancelled').forEach(t=>{cats[t.category]=(cats[t.category]||0)+t.taxableAmount;});
+    const e=Object.entries(cats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    return{labels:e.map(x=>x[0]),values:e.map(x=>x[1])};
+  },[txns]);
+
+  const r10=useMemo(()=>[...txns].sort((a,b)=>b.timestamp>a.timestamp?1:-1).slice(0,10),[txns]);
+
+  return(
+    <div>
+      {m.overCnt>0&&<div className="alert-strip">
+        <span className="alert-text">⚠ {m.overCnt} overdue payment{m.overCnt>1?'s':''} — {fmtINR(m.overAmt)} pending</span>
+        <button className="btn btn-danger btn-sm" onClick={onViewPending}>View Pending</button>
+      </div>}
+
+      {/* Main metrics */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:12}}>
+        <div className="mc mc-income"><div className="mc-label">Total Income</div><div className="mc-val" style={{color:'#065f46'}}>{fmtINR(m.income)}</div><div className="mc-sub">All paid income</div></div>
+        <div className="mc mc-expense"><div className="mc-label">Total Expenses</div><div className="mc-val" style={{color:'#991b1b'}}>{fmtINR(m.expense+m.pmt)}</div><div className="mc-sub">Expenses + Payments</div></div>
+        <div className="mc mc-balance"><div className="mc-label">Net Balance</div><div className="mc-val" style={{color:m.balance>=0?'#1e40af':'#991b1b'}}>{fmtINR(Math.abs(m.balance))}</div><div className="mc-sub">{m.balance>=0?'Surplus':'Deficit'}</div></div>
+        <div className="mc mc-pending" style={{cursor:'pointer'}} onClick={onViewPending}><div className="mc-label">Pending Payments</div><div className="mc-val" style={{color:'#92400e'}}>{fmtINR(m.pendAmt)}</div><div className="mc-sub">{m.pendCnt} pending{m.overCnt>0?` · ${m.overCnt} overdue`:''}</div></div>
+      </div>
+
+      {/* GST + Commission metrics */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:16}}>
+        <div className="mc mc-gst"><div className="mc-label">GST Collected</div><div className="mc-val" style={{color:'#5b21b6',fontSize:18}}>{fmtINR(m.gstCol)}</div><div className="mc-sub">Output GST on sales</div></div>
+        <div className="mc mc-gst"><div className="mc-label">GST Paid</div><div className="mc-val" style={{color:'#5b21b6',fontSize:18}}>{fmtINR(m.gstPd)}</div><div className="mc-sub">Input GST on purchases</div></div>
+        <div className="mc mc-gst"><div className="mc-label">Net GST Liability</div><div className="mc-val" style={{color:m.gstNet>=0?'#9a3412':'#065f46',fontSize:18}}>{fmtINR(Math.abs(m.gstNet))}</div><div className="mc-sub">{m.gstNet>=0?'Payable to Govt':'Input Credit'}</div></div>
+        <div className="mc" style={{background:'linear-gradient(135deg,#ffedd5,#fed7aa)',borderColor:'#fdba74'}}><div className="mc-label">Commission</div><div className="mc-val" style={{color:'#9a3412',fontSize:18}}>{fmtINR(m.commInc)}</div><div className="mc-sub">Received · {fmtINR(m.commExp)} paid</div></div>
+      </div>
+
+      <div className="charts-row">
+        <div className="card chart-card"><div className="chart-title">Monthly Income vs Expense — Last 6 Months</div><div style={{height:220}}><BarChart data={barData}/></div></div>
+        <div className="card chart-card"><div className="chart-title">Expense by Category</div><div style={{height:220}}>{pieData.labels.length?<DChart data={pieData}/>:<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--muted)',fontSize:13}}>No data</div>}</div></div>
+      </div>
+
+      {/* Recent table */}
+      <div className="card" style={{marginBottom:18}}>
+        <div style={{padding:'13px 16px',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontFamily:'Syne',fontWeight:600,fontSize:13}}>Recent Transactions</span>
+          <span style={{fontSize:11,color:'var(--muted)'}}>Last 10 entries</span>
+        </div>
+        <div style={{overflowX:'auto'}}>
+          <table>
+            <thead><tr><th>Date</th><th>Vendor</th><th>Type</th><th>Category</th><th>Bill</th><th>Taxable</th><th>GST</th><th>Total</th><th>Status</th><th>Due</th></tr></thead>
+            <tbody>
+              {r10.map(t=>{const ov=t.status==='Pending'&&t.dueDate&&daysLeft(t.dueDate)<0;return(
+                <tr key={t.id} className={ov?'over':''}>
+                  <td style={{fontSize:11,color:'var(--muted)',whiteSpace:'nowrap'}}>{t.date}</td>
+                  <td><div style={{fontWeight:500,fontSize:12.5}}>{t.vendor}</div><div style={{fontSize:10.5,color:'var(--muted)'}}>{t.description?.substring(0,32)}</div></td>
+                  <td><TB type={t.type}/></td>
+                  <td style={{fontSize:11}}>{t.category}</td>
+                  <td><GB g={t.gstType}/></td>
+                  <td style={{fontSize:12}}>{fmtINR(t.taxableAmount)}</td>
+                  <td>{t.gstAmount>0?<span style={{fontSize:11,color:'#5b21b6',fontWeight:500}}>+{fmtINR(t.gstAmount)}</span>:<span style={{fontSize:11,color:'var(--muted)'}}>—</span>}</td>
+                  <td><span className={t.type==='Income'?'c-income':t.type==='Expense'?'c-expense':'c-payment'}>{fmtINR(t.amount)}</span></td>
+                  <td><SB s={t.status}/></td>
+                  <td><DueLabel d={t.dueDate} s={t.status}/></td>
+                </tr>
+              );})}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Workflow tips */}
+      <div style={{marginBottom:4}}>
+        <div style={{fontSize:13,fontWeight:600,color:'var(--muted)',marginBottom:10}}>💡 Workflow Tips for Your Team</div>
+        <div className="tip-grid">
+          {[
+            {i:'📎',h:'Attach every receipt',p:'Upload invoices to Google Drive and paste the shareable link. Makes GST audits and CA reviews effortless.'},
+            {i:'🧾',h:'GST vs Non-GST',p:'Always mark the correct bill type. Dashboard auto-tracks input credit vs output liability so GST return filing is one click.'},
+            {i:'📅',h:'Always set due dates',p:'For every Pending entry, set a due date. Overdue ones turn red automatically — nothing slips through.'},
+            {i:'✦',h:'Duplicate recurring bills',p:'Use the ✦ Duplicate button for recurring entries like rent, salary, or transport. Update only date and reference.'},
+            {i:'📊',h:'Export then file',p:'At month-end, filter by date range and export XLSX. The sheet includes all GST columns ready for your CA.'},
+            {i:'🔍',h:'Filter before export',p:'Set Type + Date range filters first, then export. Get exactly what you need — no manual editing of the sheet.'},
+          ].map(t=>(
+            <div key={t.h} className="tip-card">
+              <div className="ti">{t.i}</div>
+              <h4>{t.h}</h4>
+              <p>{t.p}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Transactions View */
+function Transactions({txns,user,onEdit,onDelete,onDuplicate,onAdd,initF}){
+  const [search,ss]=useState('');
+  const [ft,sft]=useState(initF?.type||'');
+  const [fc,sfc]=useState('');
+  const [fst,sfst]=useState(initF?.status||'');
+  const [fp,sfp]=useState('');
+  const [fg,sfg]=useState('');
+  const [fd1,sd1]=useState('');
+  const [fd2,sd2]=useState('');
+  const [overdueOnly,soo]=useState(false);
+  const [sb,ssb]=useState('date');
+  const [sd,ssd]=useState('desc');
+  const [pg,spg]=useState(1);
+  const PG=20;
+
+  const filtered=useMemo(()=>{
+    let a=[...txns];
+    if(search) a=a.filter(t=>[t.vendor,t.description,t.referenceNo,t.id,t.vendorGstin].join(' ').toLowerCase().includes(search.toLowerCase()));
+    if(ft) a=a.filter(t=>t.type===ft);
+    if(fc) a=a.filter(t=>t.category===fc);
+    if(fst) a=a.filter(t=>t.status===fst);
+    if(fp) a=a.filter(t=>t.paymentMethod===fp);
+    if(fg) a=a.filter(t=>t.gstType===fg);
+    if(fd1) a=a.filter(t=>t.date>=fd1);
+    if(fd2) a=a.filter(t=>t.date<=fd2);
+    if(overdueOnly) a=a.filter(t=>t.status==='Pending'&&t.dueDate&&daysLeft(t.dueDate)<0);
+    a.sort((a,b)=>{let va=a[sb],vb=b[sb];if(['amount','taxableAmount','gstAmount'].includes(sb)){va=Number(va);vb=Number(vb);}return sd==='asc'?(va>vb?1:-1):(va<vb?1:-1);});
+    return a;
+  },[txns,search,ft,fc,fst,fp,fg,fd1,fd2,overdueOnly,sb,sd]);
+
+  const tots=useMemo(()=>({
+    income:filtered.filter(t=>t.type==='Income'&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0),
+    expense:filtered.filter(t=>t.type==='Expense'&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0),
+    gst:filtered.filter(t=>t.status!=='Cancelled').reduce((s,t)=>s+t.gstAmount,0),
+  }),[filtered]);
+
+  const pages=Math.ceil(filtered.length/PG);
+  const paged=filtered.slice((pg-1)*PG,pg*PG);
+  const col=c=>{ if(sb===c) ssd(d=>d==='asc'?'desc':'asc'); else{ssb(c);ssd('desc');} spg(1); };
+  const aw=c=>sb===c?(sd==='asc'?' ↑':' ↓'):'';
+  const reset=()=>{ss('');sft('');sfc('');sfst('');sfp('');sfg('');sd1('');sd2('');soo(false);spg(1);};
+
+  const exportX=()=>{
+    const rows=filtered.map(t=>({'ID':t.id,'Date':t.date,'Type':t.type,'Category':t.category,'Vendor':t.vendor,'GSTIN':t.vendorGstin,'Description':t.description,'Bill Type':t.gstType,'Taxable Amt':t.taxableAmount,'GST Rate %':t.gstRate,'GST Amt':t.gstAmount,'Total Amt':t.amount,'Payment Method':t.paymentMethod,'Reference No':t.referenceNo,'Proof Link':t.proofLink,'Status':t.status,'Due Date':t.dueDate,'Added By':t.addedBy,'Timestamp':t.timestamp}));
+    const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Transactions');
+    XLSX.writeFile(wb,'finance_'+today()+'.xlsx');
+  };
+
+  return(
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16,flexWrap:'wrap',gap:10}}>
+        <div>
+          <h2 style={{fontSize:20,fontWeight:700,marginBottom:2}}>Transactions</h2>
+          <p style={{fontSize:13,color:'var(--muted)'}}>{filtered.length} record{filtered.length!==1?'s':''}{filtered.length!==txns.length?` (filtered from ${txns.length})`:'  total'}</p>
+        </div>
+        <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+          <button className="btn btn-green" onClick={exportX}>
+            <svg className="ni" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 12l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Export XLSX
+          </button>
+          {user&&<button className="btn btn-primary" onClick={onAdd}>
+            <svg className="ni" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            Add Transaction
+          </button>}
+        </div>
+      </div>
+
+      <div className="card">
+        {/* Filters */}
+        <div className="filter-bar">
+          <input type="search" placeholder="🔍 Search vendor, GSTIN, ID, ref..." value={search} onChange={e=>{ss(e.target.value);spg(1);}} style={{flex:1,minWidth:180}}/>
+          <select value={ft} onChange={e=>{sft(e.target.value);spg(1);}}><option value="">All Types</option>{TYPES.map(t=><option key={t}>{t}</option>)}</select>
+          <select value={fc} onChange={e=>{sfc(e.target.value);spg(1);}}><option value="">All Categories</option>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select>
+          <select value={fg} onChange={e=>{sfg(e.target.value);spg(1);}}><option value="">GST / Non-GST</option>{GST_TYPES.map(g=><option key={g}>{g}</option>)}</select>
+          <select value={fst} onChange={e=>{sfst(e.target.value);spg(1);}}><option value="">All Status</option>{STATUSES.map(s=><option key={s}>{s}</option>)}</select>
+          <select value={fp} onChange={e=>{sfp(e.target.value);spg(1);}}><option value="">All Methods</option>{PAY_METHODS.map(m=><option key={m}>{m}</option>)}</select>
+          <input type="date" value={fd1} onChange={e=>{sd1(e.target.value);spg(1);}} title="From date" style={{width:128}}/>
+          <input type="date" value={fd2} onChange={e=>{sd2(e.target.value);spg(1);}} title="To date" style={{width:128}}/>
+          <label style={{display:'flex',alignItems:'center',gap:5,fontSize:12,color:'var(--muted)',cursor:'pointer',whiteSpace:'nowrap'}}>
+            <input type="checkbox" checked={overdueOnly} onChange={e=>{soo(e.target.checked);spg(1);}}/> Overdue only
+          </label>
+          <button className="btn btn-ghost btn-sm" onClick={reset}>✕ Clear</button>
+        </div>
+
+        {/* Totals bar */}
+        <div className="totals-bar">
+          <span style={{fontSize:10,fontWeight:600,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.05em'}}>Filtered totals:</span>
+          <div className="tc"><span className="lbl">Income</span><span className="val c-income">{fmtINR(tots.income)}</span></div>
+          <div className="tc"><span className="lbl">Expense</span><span className="val c-expense">{fmtINR(tots.expense)}</span></div>
+          <div className="tc"><span className="lbl">Net</span><span className="val" style={{color:(tots.income-tots.expense)>=0?'#059669':'#dc2626'}}>{fmtINR(Math.abs(tots.income-tots.expense))}</span></div>
+          <div className="tc"><span className="lbl">GST involved</span><span className="val" style={{color:'#5b21b6'}}>{fmtINR(tots.gst)}</span></div>
+          <span style={{marginLeft:'auto',fontSize:11,color:'var(--muted)'}}>Showing {paged.length} of {filtered.length}</span>
+        </div>
+
+        {/* Table */}
+        <div style={{overflowX:'auto'}}>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th className="sc" onClick={()=>col('date')}>Date{aw('date')}</th>
+                <th>Type</th>
+                <th className="sc" onClick={()=>col('vendor')}>Vendor{aw('vendor')}</th>
+                <th className="sc" onClick={()=>col('category')}>Category{aw('category')}</th>
+                <th>Bill</th>
+                <th className="sc" onClick={()=>col('taxableAmount')}>Taxable{aw('taxableAmount')}</th>
+                <th>GST</th>
+                <th className="sc" onClick={()=>col('amount')}>Total{aw('amount')}</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Due</th>
+                <th>Proof</th>
+                {user&&<th>Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {paged.length===0
+                ?<tr><td colSpan={user?14:13} style={{textAlign:'center',padding:40,color:'var(--muted)',fontSize:13}}>No transactions match the filters.</td></tr>
+                :paged.map(t=>{
+                  const ov=t.status==='Pending'&&t.dueDate&&daysLeft(t.dueDate)<0;
+                  return(
+                    <tr key={t.id} className={ov?'over':''}>
+                      <td style={{fontSize:10,color:'var(--muted)',fontFamily:'monospace',whiteSpace:'nowrap'}}>{t.id}</td>
+                      <td style={{fontSize:11,whiteSpace:'nowrap'}}>{t.date}</td>
+                      <td><TB type={t.type}/></td>
+                      <td>
+                        <div style={{fontWeight:500,fontSize:12.5}}>{t.vendor}</div>
+                        {t.vendorGstin&&<div style={{fontSize:10,color:'var(--muted)',fontFamily:'monospace'}}>{t.vendorGstin}</div>}
+                        {t.description&&<div style={{fontSize:10.5,color:'var(--muted)'}}>{t.description.substring(0,32)}{t.description.length>32?'…':''}</div>}
+                      </td>
+                      <td style={{fontSize:11.5}}>{t.category}</td>
+                      <td><GB g={t.gstType}/></td>
+                      <td style={{fontSize:12.5}}>{fmtINR(t.taxableAmount)}</td>
+                      <td>{t.gstAmount>0?<span style={{fontSize:11,color:'#5b21b6',fontWeight:500}}>+{fmtINR(t.gstAmount)}<br/><span style={{fontSize:10,fontWeight:400}}>@{t.gstRate}%</span></span>:<span style={{fontSize:11,color:'var(--muted)'}}>—</span>}</td>
+                      <td style={{whiteSpace:'nowrap'}}><span className={t.type==='Income'?'c-income':t.type==='Expense'?'c-expense':'c-payment'}>{fmtINR(t.amount)}</span></td>
+                      <td style={{fontSize:11}}>{t.paymentMethod}</td>
+                      <td><SB s={t.status}/>{ov&&<div style={{fontSize:10,color:'#991b1b',marginTop:2}}>⚠ Overdue</div>}</td>
+                      <td><DueLabel d={t.dueDate} s={t.status}/></td>
+                      <td>{t.proofLink?<a href={t.proofLink} target="_blank" rel="noreferrer" className="link-a">View ↗</a>:<span style={{color:'var(--muted)',fontSize:11}}>—</span>}</td>
+                      {user&&<td>
+                        <div style={{display:'flex',gap:4}}>
+                          <button className="btn btn-outline btn-sm" onClick={()=>onEdit(t)} title="Edit">✏</button>
+                          <button className="btn btn-ghost btn-sm" onClick={()=>onDuplicate(t)} title="Duplicate">✦</button>
+                          <button className="btn btn-danger btn-sm" onClick={()=>onDelete(t.id)} title="Delete">🗑</button>
+                        </div>
+                      </td>}
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+
+        {pages>1&&<div className="pager">
+          <span style={{fontSize:11,color:'var(--muted)',marginRight:6}}>Page {pg} of {pages}</span>
+          <button className="pb" disabled={pg===1} onClick={()=>spg(1)}>«</button>
+          <button className="pb" disabled={pg===1} onClick={()=>spg(p=>p-1)}>‹</button>
+          {Array.from({length:pages},(_,i)=>i+1).filter(p=>Math.abs(p-pg)<=2).map(p=>(
+            <button key={p} className={`pb ${p===pg?'act':''}`} onClick={()=>spg(p)}>{p}</button>
+          ))}
+          <button className="pb" disabled={pg===pages} onClick={()=>spg(p=>p+1)}>›</button>
+          <button className="pb" disabled={pg===pages} onClick={()=>spg(pages)}>»</button>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+/* App root */
+function App(){
+  const [user,su]=useState(null);
+  const [view,sv]=useState('dashboard');
+  const [txFilter,stf]=useState({});
+  const [txns,st]=useState(()=>{ try{const s=localStorage.getItem('fm_v4');return s?JSON.parse(s):SAMPLE;}catch{return SAMPLE;} });
+  const [modal,sm]=useState(false);
+  const [editing,se]=useState(null);
+  const [loginModal,slm]=useState(false);
+  const [toast,sto]=useState(null);
+  const [delId,sdel]=useState(null);
+  const [sideOpen,sso]=useState(false);
+
+  useEffect(()=>{ try{localStorage.setItem('fm_v4',JSON.stringify(txns));}catch{} },[txns]);
+
+  const notify=(msg,type='success')=>{ sto({msg,type}); setTimeout(()=>sto(null),3200); };
+
+  const handleLogin=u=>{ su({username:u}); slm(false); notify('Welcome, '+u+' ✓'); };
+  const handleLogout=()=>{ su(null); notify('Logged out'); };
+
+  const handleSave=tx=>{
+    if(editing){
+      st(prev=>prev.map(t=>t.id===editing.id?{...tx,id:editing.id,addedBy:editing.addedBy,timestamp:editing.timestamp}:t));
+      notify('Updated ✓');
+    } else {
+      st(prev=>[{...tx,id:genId(),addedBy:user.username,timestamp:new Date().toISOString()},...prev]);
+      notify('Transaction added ✓');
+    }
+    sm(false); se(null);
+  };
+
+  const openAdd=()=>{ se(null); sm(true); sso(false); };
+  const openEdit=tx=>{ se(tx); sm(true); };
+  const openDup=tx=>{ se({...tx,id:null,date:today(),status:'Pending',referenceNo:'',proofLink:'',timestamp:null}); sm(true); notify('Duplicated — update date & details','warn'); };
+  const doDelete=()=>{ st(prev=>prev.filter(t=>t.id!==delId)); sdel(null); notify('Deleted','error'); };
+  const goToPending=()=>{ stf({status:'Pending'}); sv('transactions'); };
+
+  const nowStr=new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  return(
+    <>
+      <div className={`ovl ${sideOpen?'open':''}`} onClick={()=>sso(false)}/>
+
+      <div className={`sidebar ${sideOpen?'open':''}`}>
+        <div className="sidebar-logo"><h2>FinanceOS</h2><span className="vtag">v2.0</span></div>
+        <nav className="sidebar-nav">
+          <div className="nav-sec">Navigation</div>
+          <div className={`nav-item ${view==='dashboard'?'active':''}`} onClick={()=>{sv('dashboard');sso(false);}}>
+            <svg className="ni" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+          </div>
+          <div className={`nav-item ${view==='transactions'?'active':''}`} onClick={()=>{stf({});sv('transactions');sso(false);}}>
+            <svg className="ni" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Transactions
+          </div>
+          {user&&<>
+            <div className="nav-sec" style={{marginTop:8}}>Actions</div>
+            <div className="nav-item" onClick={openAdd}>
+              <svg className="ni" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+              Add Entry
+            </div>
+          </>}
+        </nav>
+        <div className="sidebar-footer">
+          {user?(
+            <div>
+              <div style={{color:'rgba(255,255,255,.35)',fontSize:10,marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em'}}>Logged in as</div>
+              <div style={{color:'#fff',fontSize:13,fontWeight:500,marginBottom:9}}>{user.username}</div>
+              <button className="btn btn-outline" style={{width:'100%',justifyContent:'center',fontSize:11.5}} onClick={handleLogout}>Logout</button>
+            </div>
+          ):(
+            <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={()=>slm(true)}>
+              <svg className="ni" viewBox="0 0 24 24" style={{width:14,height:14}}><path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+              Accountant Login
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="main">
+        <div className="topbar">
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <button className="hamburger" onClick={()=>sso(o=>!o)} aria-label="Menu">
+              <svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <div>
+              <div className="topbar-title">Sri Tiruppur Textiles &amp; Co.</div>
+              <div className="topbar-date">{nowStr}</div>
+            </div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:7}}>
+            {user?<span className="badge bg-green">● Accountant</span>:<span className="badge bg-blue">● Public View</span>}
+          </div>
+        </div>
+
+        <div className="content">
+          {view==='dashboard'&&<Dashboard txns={txns} onViewPending={goToPending}/>}
+          {view==='transactions'&&<Transactions txns={txns} user={user} onEdit={openEdit} onDelete={id=>sdel(id)} onDuplicate={openDup} onAdd={openAdd} initF={txFilter}/>}
+        </div>
+      </div>
+
+      {loginModal&&<LoginModal onLogin={handleLogin} onClose={()=>slm(false)}/>}
+      {modal&&<TxModal tx={editing} onSave={handleSave} onClose={()=>{sm(false);se(null);}}/>}
+
+      {delId&&<div className="overlay-c">
+        <div className="confirm-box">
+          <h4>Delete transaction?</h4>
+          <p>This cannot be undone. The record will be permanently removed.</p>
+          <div style={{display:'flex',gap:7,justifyContent:'flex-end'}}>
+            <button className="btn btn-outline" onClick={()=>sdel(null)}>Cancel</button>
+            <button className="btn btn-danger" onClick={doDelete}>Delete</button>
+          </div>
+        </div>
+      </div>}
+
+      {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
