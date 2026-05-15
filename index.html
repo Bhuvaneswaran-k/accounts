@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>WeFashion — Finance Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f172a;--accent:#6366f1;--accent2:#4f46e5;
+  --bg:#f1f5f9;--card:#fff;--text:#0f172a;--t2:#475569;--t3:#94a3b8;
+  --border:#e2e8f0;--sw:250px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+h1,h2,h3,h4{font-family:'Syne',sans-serif}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:var(--navy);display:flex;flex-direction:column;z-index:100;transition:transform .25s}
+.logo-wrap{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
+.logo-box{width:34px;height:34px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+.logo-text h2{color:#fff;font-size:15px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.logo-text p{color:rgba(255,255,255,.28);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
+.nav-lbl{font-size:9px;font-weight:600;color:rgba(255,255,255,.18);letter-spacing:.1em;text-transform:uppercase;padding:12px 16px 3px}
+.snav{padding:6px 8px;flex:1;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:1px;user-select:none;position:relative}
+.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+.ni.active{background:rgba(99,102,241,.22);color:#a5b4fc}
+.ni svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;flex-shrink:0}
+.nbadge{position:absolute;right:10px;background:#ef4444;color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px}
+.sb-foot{padding:10px 8px;border-top:1px solid rgba(255,255,255,.07)}
+.user-pill{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.05)}
+.user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a5b4fc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.main{margin-left:var(--sw);min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 22px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--sh);gap:12px}
+.tb-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.tb-date{font-size:11px;color:var(--t3);margin-top:1px}
+.content{padding:22px 24px;max-width:1400px}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-g{background:#d1fae5;color:#065f46}.b-r{background:#fee2e2;color:#991b1b}.b-a{background:#fef3c7;color:#92400e}.b-gr{background:#f1f5f9;color:#475569}.b-i{background:#e0e7ff;color:#3730a3}.b-p{background:#ede9fe;color:#5b21b6}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh)}
+.ch{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.ct{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700}
+.mc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.mc{background:#fff;border:1px solid var(--border);border-radius:13px;padding:17px 19px;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:default}
+.mc-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:13px 13px 0 0}
+.mc-lbl{font-size:10.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px}
+.mc-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;line-height:1;margin-bottom:5px}
+.mc-sub{font-size:11.5px;color:var(--t3)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all .15s;line-height:1;white-space:nowrap}
+.bp{background:var(--accent);color:#fff}.bp:hover{background:var(--accent2)}
+.bo{background:#fff;color:var(--text);border:1px solid var(--border)}.bo:hover{background:var(--bg)}
+.bd{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}.bd:hover{background:#fecaca}
+.bg2{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}.bg2:hover{background:#a7f3d0}
+.bgh{background:transparent;color:var(--t2);border:1px solid transparent}.bgh:hover{background:var(--bg)}
+.bsm{padding:5px 10px;font-size:12px;border-radius:7px}
+.bxs{padding:3px 8px;font-size:11px;border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#f8fafc;padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;cursor:default}
+th.sc{cursor:pointer}.th.sc:hover{color:var(--accent)}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f9fafb}
+tr.ov td{background:#fff8f8}
+.fb{display:flex;gap:6px;flex-wrap:wrap;padding:10px 13px;border-bottom:1px solid var(--border);align-items:center;background:#fafbfd}
+.fb input,.fb select{padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-size:12px;height:32px;background:#fff;color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border-color .15s}
+.fb input:focus,.fb select:focus{border-color:var(--accent)}
+.tb{display:flex;gap:13px;padding:8px 13px;background:#f8fafc;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;font-size:12.5px}
+.tbl{color:var(--t3);font-weight:500}
+.tbv{font-weight:700;font-family:'Syne',sans-serif;font-size:12.5px}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:640px;max-height:93vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mh{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1;border-radius:16px 16px 0 0}
+.mh h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.mb{padding:16px 20px 20px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.04em}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg textarea{resize:vertical;min-height:52px}
+.fg input[readonly]{background:#f8fafc;color:var(--t3)}
+.fg .err{color:#dc2626;font-size:11px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.full{grid-column:1/-1}
+.ff{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.gst-tog{display:flex;background:#f1f5f9;border-radius:8px;padding:3px;width:fit-content}
+.gst-tog label{padding:6px 16px;border-radius:7px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--t3);user-select:none;transition:all .15s}
+.gst-tog input{display:none}
+.gst-tog input:checked+label{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.gst-area{background:#f0f9ff;border:1px solid #bae6fd;border-radius:9px;padding:11px 13px;margin:7px 0}
+.gst-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.gst-tot{background:#e0f2fe;border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.up-area{border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:#fafafa}
+.up-area:hover{border-color:var(--accent);background:#f0f0ff}
+.up-area.filled{border-style:solid;border-color:#6ee7b7;background:#f0fdf4}
+.toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:400}
+.toast{background:#1e293b;color:#fff;padding:10px 15px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;animation:su .2s ease;max-width:290px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.toast.success{background:#059669}.toast.error{background:#dc2626}.toast.warn{background:#d97706}
+@keyframes su{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ov-c{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:250;display:flex;align-items:center;justify-content:center;padding:16px}
+.conf-card{background:#fff;border-radius:14px;padding:22px;width:310px;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.conf-card h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.conf-card p{font-size:13px;color:var(--t2);margin-bottom:16px;line-height:1.6}
+.login-page{min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e1b4b);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:#fff;border-radius:18px;padding:30px;width:360px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.rtabs{display:flex;background:#f1f5f9;border-radius:10px;padding:3px;width:fit-content;margin-bottom:16px}
+.rtab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--t3);background:none;border:none;font-family:'Inter',sans-serif;transition:all .15s}
+.rtab.active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.plr{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 13px;border-radius:7px;font-size:13.5px;align-items:center}
+.plhd{background:var(--bg);font-weight:600;font-family:'Syne',sans-serif;margin-top:5px}
+.pltot{border-top:2px solid var(--border);font-weight:700;font-family:'Syne',sans-serif;font-size:15px;margin-top:3px;padding-top:10px}
+.plsub{border-top:1px solid var(--border);font-weight:600;color:var(--t2);margin-top:2px}
+.plamt{text-align:right;font-family:'Syne',sans-serif;font-weight:600}
+.ss{background:#fff;border:1px solid var(--border);border-radius:13px;padding:19px 21px;margin-bottom:13px;box-shadow:var(--sh)}
+.ss h3{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700;margin-bottom:3px}
+.ss-sub{font-size:12.5px;color:var(--t3);margin-bottom:14px;line-height:1.5}
+.info-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:9px 12px;font-size:12px;color:#0369a1;line-height:1.6;margin-top:8px}
+.c-g{color:#059669;font-weight:600}.c-r{color:#dc2626;font-weight:600}.c-p{color:#7c3aed;font-weight:600}
+.linka{background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;text-decoration:underline;padding:0;font-family:'Inter',sans-serif}
+.empty{text-align:center;padding:55px 20px;color:var(--t3)}
+.empty h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.pager{display:flex;align-items:center;gap:4px;padding:10px 13px;justify-content:flex-end;border-top:1px solid var(--border)}
+.pb{padding:5px 11px;border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;background:#fff;color:var(--text)}
+.pb.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pb:disabled{opacity:.35;cursor:default}
+.sc-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px}
+.sc-sub{font-size:12.5px;color:var(--t3);margin-bottom:16px}
+.sc-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:17px;flex-wrap:wrap;gap:10px}
+.sync-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--t2);cursor:pointer;transition:all .15s}
+.sync-chip:hover{background:var(--border)}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.s-ok{background:#10b981}.s-sy{background:#f59e0b;animation:pulse .8s infinite}.s-er{background:#ef4444}.s-id{background:var(--t3)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pc{background:linear-gradient(135deg,#f0f0ff,#e0e7ff);border:1px solid #c7d2fe;border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.pc h3{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700;color:#3730a3;margin-bottom:4px}
+.ps{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;margin-bottom:9px}
+.pn{width:20px;height:20px;border-radius:50%;background:#6366f1;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+code.pill{background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:11px;color:#4338ca}
+.due-over{color:#991b1b;font-size:11px;font-weight:500}
+.due-warn{color:#92400e;font-size:11px;font-weight:500}
+.due-ok{color:var(--t3);font-size:11px}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:13px;margin-bottom:16px}
+.party-card{background:#fff;border:1px solid var(--border);border-radius:11px;padding:13px 15px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:11px}
+.party-card:hover{border-color:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.party-av{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}.ovl.open{display:block}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--text);align-items:center}
+@media(max-width:920px){
+  .sidebar{transform:translateX(-250px)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}
+  .mc-grid{grid-template-columns:1fr 1fr}.fgrid{grid-template-columns:1fr}.gst-row{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 13px}.content{padding:13px}.hamburger{display:flex!important}.charts-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo,useCallback}=React;
+
+/* ── Firebase REST API ───────────────────────────────────── */
+const FB='https://wefashion-finance-default-rtdb.asia-southeast1.firebasedatabase.app/wefashion/transactions.json';
+
+async function fbRead(){
+  const r=await fetch(FB,{cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const v=await r.json();
+  if(!v) return [];
+  return Object.values(v).filter(Boolean).sort((a,b)=>b.timestamp>a.timestamp?1:-1);
+}
+
+async function fbWrite(txns){
+  const obj={};
+  txns.forEach(t=>{if(t&&t.id) obj[t.id]={...t};});
+  const r=await fetch(FB,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+}
+
+/* ── Constants ───────────────────────────────────────────── */
+const CATS=['Sales','Commission','Salary','Rent','Raw Material','Utilities','Tax','Maintenance','Transport','Other'];
+const PAY_M=['Cash','Bank Transfer','UPI','Cheque'];
+const TYPES=['Income','Expense','Payment'];
+const STATS=['Paid','Pending','Cancelled'];
+const GST_TYPES=['Non-GST Bill','GST Bill'];
+const GST_RATES=[0,5,12,18,28];
+const COLORS=['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#64748b'];
+const CREDS_KEY='wf_creds';
+const CACHE_KEY='wf_cache';
+const IMGS_KEY='wf_imgs';
+const DEF_CREDS={u:'admin',p:'WeFashion@2024'};
+
+/* ── Helpers ─────────────────────────────────────────────── */
+const ls=(k,d)=>{try{const s=localStorage.getItem(k);return s?JSON.parse(s):d;}catch{return d;}};
+const lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+const loadCreds=()=>ls(CREDS_KEY,DEF_CREDS);
+const saveCreds=c=>lss(CREDS_KEY,c);
+const genId=()=>'WF'+Date.now().toString(36).toUpperCase();
+const today=()=>new Date().toISOString().split('T')[0];
+const fmtINR=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});
+const daysLeft=d=>Math.ceil((new Date(d)-new Date(today()))/86400000);
+const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+
+/* ── Chart wrappers ──────────────────────────────────────── */
+function BarChart({data}){
+  const r=useRef(),c=useRef();
+  useEffect(()=>{
+    if(!r.current)return;
+    if(c.current)c.current.destroy();
+    c.current=new Chart(r.current,{type:'bar',data:{
+      labels:data.labels,
+      datasets:[
+        {label:'Income',data:data.income,backgroundColor:'rgba(99,102,241,.75)',borderRadius:5,borderSkipped:false},
+        {label:'Expense',data:data.expense,backgroundColor:'rgba(239,68,68,.6)',borderRadius:5,borderSkipped:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Inter',size:11},boxWidth:10,padding:10}}},
+        scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:11}}},y:{grid:{color:'#f1f5f9'},ticks:{font:{family:'Inter',size:10},callback:v=>'₹'+(v>=100000?Math.round(v/100000)+'L':v>=1000?Math.round(v/1000)+'K':v)}}}}
+    });
+    return()=>{if(c.current)c.current.destroy();};
+  },[JSON.stringify(data)]);
+  return <canvas ref={r}/>;
+}
+
+function DChart({data}){
+  const r=useRef(),c=useRef();
+  useEffect(()=>{
+    if(!r.current||!data.labels.length)return;
+    if(c.current)c.current.destroy();
+    c.current=new Chart(r.current,{type:'doughnut',data:{labels:data.labels,datasets:[{data:data.values,backgroundColor:COLORS,borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Inter',size:11},boxWidth:9,padding:7}},tooltip:{callbacks:{label:ct=>' ₹'+Number(ct.raw).toLocaleString('en-IN')}}}}
+    });
+    return()=>{if(c.current)c.current.destroy();};
+  },[JSON.stringify(data)]);
+  return <canvas ref={r}/>;
+}
+
+/* ── Badges ──────────────────────────────────────────────── */
+const TB=({t})=><span className={`badge ${t==='Income'?'b-g':t==='Expense'?'b-r':'b-p'}`}>{t}</span>;
+const SB=({s})=><span className={`badge ${s==='Paid'?'b-g':s==='Pending'?'b-a':'b-gr'}`}>{s}</span>;
+const GB=({g})=><span className={`badge ${g==='GST Bill'?'b-i':'b-gr'}`}>{g==='GST Bill'?'GST':'Non-GST'}</span>;
+const DueLbl=({d,s})=>{
+  if(!d||s==='Paid'||s==='Cancelled') return <span className="due-ok">—</span>;
+  const dl=daysLeft(d);
+  if(dl<0) return <span className="due-over">⚠ {Math.abs(dl)}d overdue</span>;
+  if(dl<=5) return <span className="due-warn">⏳ {dl}d left</span>;
+  return <span className="due-ok">{d}</span>;
+};
+
+/* ── Toast stack ─────────────────────────────────────────── */
+function Toasts({items}){
+  return <div className="toast-wrap">{items.map(t=><div key={t.id} className={`toast ${t.type||''}`}>{t.msg}</div>)}</div>;
+}
+
+/* ── Login ───────────────────────────────────────────────── */
+function Login({onLogin}){
+  const [u,su]=useState('');
+  const [p,sp]=useState('');
+  const [show,ss]=useState(false);
+  const [err,se]=useState('');
+  const go=()=>{
+    const c=loadCreds();
+    if(u.trim()===c.u&&p===c.p) onLogin(u.trim());
+    else se('Incorrect username or password');
+  };
+  return(
+    <div className="login-page">
+      <div className="login-card">
+        <div style={{display:'flex',alignItems:'center',gap:11,marginBottom:24}}>
+          <div className="logo-box" style={{width:42,height:42,fontSize:15}}>WF</div>
+          <div><div style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:20,letterSpacing:'-.03em'}}>WeFashion</div><div style={{fontSize:12,color:'var(--t3)'}}>Finance Manager</div></div>
+        </div>
+        <div className="fg" style={{marginBottom:11}}><label>Username</label><input value={u} onChange={e=>su(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} placeholder="Enter username" autoFocus/></div>
+        <div className="fg" style={{marginBottom:15}}>
+          <label>Password</label>
+          <div style={{position:'relative'}}>
+            <input type={show?'text':'password'} value={p} onChange={e=>sp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} placeholder="Enter password" style={{width:'100%',paddingRight:40}}/>
+            <button onClick={()=>ss(!show)} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--t3)',fontSize:12}}>{show?'Hide':'Show'}</button>
+          </div>
+        </div>
+        {err&&<div style={{background:'#fee2e2',color:'#991b1b',padding:'8px 12px',borderRadius:8,fontSize:13,marginBottom:12}}>{err}</div>}
+        <button className="btn bp" style={{width:'100%',justifyContent:'center',padding:'11px 0',fontSize:14}} onClick={go}>Login as Admin</button>
+        <div style={{textAlign:'center',marginTop:13,fontSize:12,color:'var(--t3)'}}>Admin login required to manage records.<br/>Public viewers can access without login.</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Transaction Modal ───────────────────────────────────── */
+function TxModal({tx,onSave,onClose}){
+  const [f,sf]=useState({
+    date:tx?.date||today(),type:tx?.type||'Expense',category:tx?.category||'Other',
+    vendor:tx?.vendor||'',vendorGstin:tx?.vendorGstin||'',description:tx?.description||'',
+    paymentMethod:tx?.paymentMethod||'Bank Transfer',referenceNo:tx?.referenceNo||'',
+    proofLink:tx?.proofLink||'',status:tx?.status||'Paid',dueDate:tx?.dueDate||'',
+    gstType:tx?.gstType||'Non-GST Bill',gstRate:tx?.gstRate||18,
+    taxableAmount:tx?.taxableAmount||'',gstAmount:tx?.gstAmount||0,amount:tx?.amount||''
+  });
+  const [errs,se]=useState({});
+  const [img,si]=useState(null);
+  const set=(k,v)=>sf(p=>({...p,[k]:v}));
+
+  useEffect(()=>{
+    if(tx?.id){const imgs=ls(IMGS_KEY,{});if(imgs[tx.id])si(imgs[tx.id]);}
+  },[]);
+
+  const calc=(ta,rate,gt)=>{
+    if(gt==='GST Bill'&&Number(ta)>0){const g=Math.round(Number(ta)*rate/100);return{gstAmount:g,amount:Number(ta)+g};}
+    return{gstAmount:0,amount:Number(ta)||0};
+  };
+  const onTA=v=>{const r=calc(v,f.gstRate,f.gstType);sf(p=>({...p,taxableAmount:v,...r}));};
+  const onRate=v=>{const r=calc(f.taxableAmount,Number(v),f.gstType);sf(p=>({...p,gstRate:Number(v),...r}));};
+  const onGT=v=>{const r=calc(f.taxableAmount,f.gstRate,v);sf(p=>({...p,gstType:v,...r}));};
+
+  const handleImg=e=>{
+    const file=e.target.files[0];if(!file)return;
+    if(file.size>2097152){alert('Image must be under 2MB');return;}
+    const rd=new FileReader();rd.onload=ev=>si(ev.target.result);rd.readAsDataURL(file);
+  };
+
+  const validate=()=>{
+    const e={};
+    if(!f.date)e.date='Required';
+    if(!f.vendor.trim())e.vendor='Required';
+    if(!f.taxableAmount||Number(f.taxableAmount)<=0)e.ta='Enter a valid amount';
+    se(e);return !Object.keys(e).length;
+  };
+
+  const submit=()=>{
+    if(validate()) onSave({...f,taxableAmount:Number(f.taxableAmount),gstAmount:Number(f.gstAmount),amount:Number(f.amount)},img);
+  };
+
+  const isGst=f.gstType==='GST Bill';
+
+  return(
+    <div className="modal-bg" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="mh"><h3>{tx?'Edit Transaction':'Add Transaction'}</h3><button className="btn bgh bsm" onClick={onClose}>✕ Close</button></div>
+        <div className="mb">
+          <div className="fgrid">
+            <div className="fg"><label>Date *</label><input type="date" value={f.date} onChange={e=>set('date',e.target.value)}/>{errs.date&&<span className="err">{errs.date}</span>}</div>
+            <div className="fg"><label>Type</label><select value={f.type} onChange={e=>set('type',e.target.value)}>{TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+            <div className="fg"><label>Category</label><select value={f.category} onChange={e=>set('category',e.target.value)}>{CATS.map(c=><option key={c}>{c}</option>)}</select></div>
+            <div className="fg"><label>Status</label><select value={f.status} onChange={e=>set('status',e.target.value)}>{STATS.map(s=><option key={s}>{s}</option>)}</select></div>
+            {f.status==='Pending'&&<div className="fg full"><label>Due Date</label><input type="date" value={f.dueDate} onChange={e=>set('dueDate',e.target.value)}/></div>}
+            <div className="fg full"><label>Vendor / Party Name *</label><input value={f.vendor} onChange={e=>set('vendor',e.target.value)} placeholder="e.g. Kovai Cotton Mills"/>{errs.vendor&&<span className="err">{errs.vendor}</span>}</div>
+            <div className="fg full"><label>Vendor GSTIN (optional)</label><input value={f.vendorGstin} onChange={e=>set('vendorGstin',e.target.value)} placeholder="33AABCT1234F1ZK" style={{fontFamily:'monospace',letterSpacing:'.04em'}}/></div>
+          </div>
+
+          <div style={{margin:'10px 0 4px',fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.04em'}}>Bill Type</div>
+          <div className="gst-tog">
+            {GST_TYPES.map(g=>(
+              <React.Fragment key={g}>
+                <input type="radio" name="gtr" id={`gtr_${g.replace(' ','_')}`} checked={f.gstType===g} onChange={()=>onGT(g)}/>
+                <label htmlFor={`gtr_${g.replace(' ','_')}`}>{g}</label>
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div className="gst-area">
+            <div className="gst-row">
+              <div className="fg"><label>{isGst?'Base Amount (excl. GST) *':'Amount ₹ *'}</label><input type="number" min="0.01" step="0.01" value={f.taxableAmount} onChange={e=>onTA(e.target.value)} placeholder="0.00"/>{errs.ta&&<span className="err">{errs.ta}</span>}</div>
+              {isGst&&<div className="fg"><label>GST Rate</label><select value={f.gstRate} onChange={e=>onRate(e.target.value)}>{GST_RATES.map(r=><option key={r} value={r}>{r}%</option>)}</select></div>}
+              {isGst&&<div className="fg"><label>GST Amount ₹</label><input readOnly value={f.gstAmount||''} placeholder="Auto"/></div>}
+            </div>
+            {isGst&&Number(f.taxableAmount)>0&&(
+              <div className="gst-tot">
+                <span style={{fontSize:12,color:'#0369a1'}}>Base {fmtINR(f.taxableAmount)} + GST @{f.gstRate}% = {fmtINR(f.gstAmount)}</span>
+                <span style={{fontFamily:'Syne,sans-serif',fontWeight:700,color:'#0c4a6e',fontSize:15}}>Total: {fmtINR(f.amount)}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="fgrid" style={{marginTop:8}}>
+            <div className="fg"><label>Payment Method</label><select value={f.paymentMethod} onChange={e=>set('paymentMethod',e.target.value)}>{PAY_M.map(m=><option key={m}>{m}</option>)}</select></div>
+            <div className="fg"><label>Reference / Cheque No.</label><input value={f.referenceNo} onChange={e=>set('referenceNo',e.target.value)} placeholder="NEFT / UPI / Cheque ref"/></div>
+            <div className="fg full">
+              <label>Upload Receipt / Invoice</label>
+              <div className={`up-area ${img?'filled':''}`} onClick={()=>document.getElementById('f_img_inp').click()}>
+                {img
+                  ?<div><img src={img} style={{maxWidth:'100%',maxHeight:110,borderRadius:6,objectFit:'contain'}} alt="proof"/><div style={{fontSize:11,color:'#059669',marginTop:5}}>✓ Image attached — click to change</div></div>
+                  :<div style={{padding:'6px 0'}}><div style={{fontSize:26,marginBottom:5}}>📎</div><div style={{fontSize:12.5,fontWeight:500,color:'var(--t3)'}}>Click to upload receipt or invoice</div><div style={{fontSize:11,color:'var(--t3)',marginTop:3}}>JPG · PNG · max 2MB</div></div>}
+              </div>
+              <input id="f_img_inp" type="file" accept="image/*" style={{display:'none'}} onChange={handleImg}/>
+              {img&&<button className="btn bxs bd" style={{marginTop:5,width:'fit-content'}} onClick={()=>si(null)}>✕ Remove</button>}
+            </div>
+            <div className="fg full"><label>Payment Proof Link (Google Drive)</label><input type="url" value={f.proofLink} onChange={e=>set('proofLink',e.target.value)} placeholder="Paste shareable Google Drive link (visible on all devices)"/></div>
+            <div className="fg full"><label>Description / Remarks</label><textarea value={f.description} onChange={e=>set('description',e.target.value)} placeholder="Additional notes..."/></div>
+          </div>
+
+          <div className="info-box">📌 Images stored on this device. For cross-device proof access, upload to Google Drive and paste the link above.</div>
+          <div className="ff"><button className="btn bo" onClick={onClose}>Cancel</button><button className="btn bp" onClick={submit}>{tx?'Update Transaction':'Add Transaction'}</button></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Image Viewer ────────────────────────────────────────── */
+function ImgViewer({src,onClose}){
+  return(
+    <div className="modal-bg" onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:12,padding:14,maxWidth:580,width:'100%',maxHeight:'90vh',overflow:'auto'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}><span style={{fontWeight:600,fontSize:13}}>Payment Proof</span><button className="btn bsm bo" onClick={onClose}>✕ Close</button></div>
+        <img src={src} style={{width:'100%',borderRadius:8}} alt="proof"/>
+      </div>
+    </div>
+  );
+}
+
+/* ── Dashboard ───────────────────────────────────────────── */
+function Dashboard({txns,user,onAdd,onViewPending}){
+  const m=useMemo(()=>{
+    const ok=t=>t.status!=='Cancelled';
+    const inc=txns.filter(t=>t.type==='Income'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    const exp=txns.filter(t=>t.type==='Expense'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    const pmt=txns.filter(t=>t.type==='Payment'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    const pend=txns.filter(t=>t.status==='Pending');
+    const over=pend.filter(t=>t.dueDate&&daysLeft(t.dueDate)<0);
+    const gstO=txns.filter(t=>t.type==='Income'&&ok(t)&&t.gstType==='GST Bill').reduce((s,t)=>s+t.gstAmount,0);
+    const gstI=txns.filter(t=>t.type==='Expense'&&ok(t)&&t.gstType==='GST Bill').reduce((s,t)=>s+t.gstAmount,0);
+    const thisM=today().substring(0,7);
+    const mInc=txns.filter(t=>t.type==='Income'&&ok(t)&&t.date.startsWith(thisM)).reduce((s,t)=>s+t.amount,0);
+    const mExp=txns.filter(t=>t.type==='Expense'&&ok(t)&&t.date.startsWith(thisM)).reduce((s,t)=>s+t.amount,0);
+    const commInc=txns.filter(t=>t.category==='Commission'&&t.type==='Income'&&ok(t)).reduce((s,t)=>s+t.amount,0);
+    return{inc,exp,pmt,bal:inc-exp-pmt,pendCnt:pend.length,pendAmt:pend.reduce((s,t)=>s+t.amount,0),overCnt:over.length,overAmt:over.reduce((s,t)=>s+t.amount,0),gstO,gstI,gstN:gstO-gstI,mInc,mExp,commInc};
+  },[txns]);
+
+  const barD=useMemo(()=>{
+    const now=new Date();
+    const months=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return{label:d.toLocaleString('default',{month:'short'}),key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};});
+    return{labels:months.map(x=>x.label),income:months.map(x=>txns.filter(t=>t.type==='Income'&&t.date.startsWith(x.key)&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0)),expense:months.map(x=>txns.filter(t=>t.type==='Expense'&&t.date.startsWith(x.key)&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0))};
+  },[txns]);
+
+  const pieD=useMemo(()=>{
+    const cats={};
+    txns.filter(t=>t.type==='Expense'&&t.status!=='Cancelled').forEach(t=>{cats[t.category]=(cats[t.category]||0)+t.taxableAmount;});
+    const e=Object.entries(cats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    return{labels:e.map(x=>x[0]),values:e.map(x=>x[1])};
+  },[txns]);
+
+  const recent=useMemo(()=>[...txns].sort((a,b)=>b.timestamp>a.timestamp?1:-1).slice(0,8),[txns]);
+  const pend5=useMemo(()=>txns.filter(t=>t.status==='Pending').sort((a,b)=>a.dueDate>b.dueDate?1:-1).slice(0,5),[txns]);
+
+  if(!txns.length) return(
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:18}}><div><div className="sc-title">Dashboard</div><div className="sc-sub">Welcome to WeFashion Finance</div></div>{user&&<button className="btn bp" onClick={onAdd}>+ Add First Transaction</button>}</div>
+      <div className="card"><div className="empty"><div style={{fontSize:40,marginBottom:12}}>📊</div><h3>No records yet</h3><p>Login as admin and add your first transaction.</p>{user&&<button className="btn bp" style={{marginTop:14}} onClick={onAdd}>+ Add Transaction</button>}</div></div>
+    </div>
+  );
+
+  return(
+    <div>
+      {m.overCnt>0&&<div style={{background:'#fee2e2',border:'1px solid #fca5a5',borderRadius:11,padding:'11px 16px',marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+        <span style={{fontSize:13,color:'#991b1b',fontWeight:500}}>⚠ {m.overCnt} overdue payment{m.overCnt>1?'s':''} totalling {fmtINR(m.overAmt)}</span>
+        <button className="btn bd bsm" onClick={onViewPending}>View Now</button>
+      </div>}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:17,flexWrap:'wrap',gap:10}}>
+        <div><div className="sc-title">Dashboard</div><div className="sc-sub">Financial overview — {new Date().toLocaleString('default',{month:'long',year:'numeric'})}</div></div>
+        {user&&<button className="btn bp" onClick={onAdd}>+ Add Transaction</button>}
+      </div>
+      <div className="mc-grid">
+        <div className="mc"><div className="mc-bar" style={{background:'#10b981'}}></div><div className="mc-lbl">Total Revenue</div><div className="mc-val" style={{color:'#065f46'}}>{fmtINR(m.inc)}</div><div className="mc-sub">This month: {fmtINR(m.mInc)}</div></div>
+        <div className="mc"><div className="mc-bar" style={{background:'#ef4444'}}></div><div className="mc-lbl">Total Expenses</div><div className="mc-val" style={{color:'#991b1b'}}>{fmtINR(m.exp+m.pmt)}</div><div className="mc-sub">This month: {fmtINR(m.mExp)}</div></div>
+        <div className="mc"><div className="mc-bar" style={{background:m.bal>=0?'#6366f1':'#ef4444'}}></div><div className="mc-lbl">Net Balance</div><div className="mc-val" style={{color:m.bal>=0?'#3730a3':'#991b1b'}}>{fmtINR(Math.abs(m.bal))}</div><div className="mc-sub" style={{color:m.bal>=0?'#059669':'#dc2626'}}>{m.bal>=0?'▲ Surplus':'▼ Deficit'}</div></div>
+        <div className="mc" style={{cursor:'pointer'}} onClick={onViewPending}><div className="mc-bar" style={{background:'#f59e0b'}}></div><div className="mc-lbl">Pending Payments</div><div className="mc-val" style={{color:'#92400e'}}>{fmtINR(m.pendAmt)}</div><div className="mc-sub">{m.pendCnt} pending{m.overCnt>0?' · '+m.overCnt+' overdue':''}</div></div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:13,marginBottom:18}}>
+        <div className="mc"><div className="mc-lbl">GST Collected</div><div className="mc-val" style={{color:'#5b21b6',fontSize:19}}>{fmtINR(m.gstO)}</div><div className="mc-sub">Output tax</div></div>
+        <div className="mc"><div className="mc-lbl">GST Paid</div><div className="mc-val" style={{color:'#5b21b6',fontSize:19}}>{fmtINR(m.gstI)}</div><div className="mc-sub">Input tax</div></div>
+        <div className="mc"><div className="mc-lbl">Net GST Payable</div><div className="mc-val" style={{color:m.gstN>=0?'#9a3412':'#065f46',fontSize:19}}>{fmtINR(Math.abs(m.gstN))}</div><div className="mc-sub">{m.gstN>=0?'Pay to Govt':'Input credit'}</div></div>
+        <div className="mc"><div className="mc-lbl">Commission</div><div className="mc-val" style={{color:'#9a3412',fontSize:19}}>{fmtINR(m.commInc)}</div><div className="mc-sub">Received</div></div>
+      </div>
+      <div className="charts-row">
+        <div className="card"><div className="ch"><div><div className="ct">Revenue vs Expenses</div><div style={{fontSize:12,color:'var(--t3)'}}>Last 6 months</div></div></div><div style={{padding:'14px 18px',height:210}}><BarChart data={barD}/></div></div>
+        <div className="card"><div className="ch"><div><div className="ct">Expense breakdown</div><div style={{fontSize:12,color:'var(--t3)'}}>By category</div></div></div><div style={{padding:'14px 18px',height:210}}>{pieD.labels.length?<DChart data={pieD}/>:<div className="empty" style={{padding:40}}>No expense data</div>}</div></div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:13,marginBottom:16}}>
+        <div className="card">
+          <div className="ch"><div className="ct">Pending payments</div></div>
+          <div style={{padding:'6px 14px'}}>
+            {pend5.length===0?<div style={{textAlign:'center',padding:'20px',color:'var(--t3)',fontSize:13}}>✅ No pending payments</div>
+            :pend5.map(t=>(
+              <div key={t.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #f1f5f9'}}>
+                <div><div style={{fontSize:13,fontWeight:500}}>{t.vendor}</div><div style={{fontSize:11,color:'var(--t3)',marginTop:2}}>{t.category}</div></div>
+                <div style={{textAlign:'right'}}><div style={{fontFamily:'Syne,sans-serif',fontWeight:700,color:'#92400e'}}>{fmtINR(t.amount)}</div><DueLbl d={t.dueDate} s={t.status}/></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <div className="ch"><div className="ct">Recent transactions</div><span style={{fontSize:12,color:'var(--t3)'}}>Last 8</span></div>
+          <div style={{overflowX:'auto'}}>
+            <table>
+              <thead><tr><th>Date</th><th>Vendor</th><th>Type</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>{recent.map(t=>(
+                <tr key={t.id}>
+                  <td style={{fontSize:11,color:'var(--t3)'}}>{t.date}</td>
+                  <td><div style={{fontWeight:500,fontSize:12.5}}>{t.vendor}</div><div style={{fontSize:10.5,color:'var(--t3)'}}>{(t.description||'').substring(0,32)}</div></td>
+                  <td><TB t={t.type}/></td>
+                  <td><span className={t.type==='Income'?'c-g':t.type==='Expense'?'c-r':'c-p'}>{fmtINR(t.amount)}</span></td>
+                  <td><SB s={t.status}/></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Transactions ─────────────────────────────────────────── */
+function Transactions({txns,imgs,user,onEdit,onDel,onDup,onAdd,initFilter,onClearFilter}){
+  const [search,ss]=useState('');
+  const [ft,sft]=useState(initFilter?.type||'');
+  const [fc,sfc]=useState('');
+  const [fst,sfst]=useState(initFilter?.status||'');
+  const [fp,sfp]=useState('');
+  const [fg,sfg]=useState('');
+  const [fd1,sd1]=useState('');
+  const [fd2,sd2]=useState('');
+  const [oo,soo]=useState(false);
+  const [sb,ssb]=useState('date');
+  const [sd,ssd]=useState('desc');
+  const [pg,spg]=useState(1);
+  const [viewImg,svi]=useState(null);
+  const PG=25;
+
+  const fil=useMemo(()=>{
+    let a=[...txns];
+    if(search)a=a.filter(t=>[t.vendor,t.description,t.referenceNo,t.id,t.vendorGstin].join(' ').toLowerCase().includes(search.toLowerCase()));
+    if(ft)a=a.filter(t=>t.type===ft);
+    if(fc)a=a.filter(t=>t.category===fc);
+    if(fst)a=a.filter(t=>t.status===fst);
+    if(fp)a=a.filter(t=>t.paymentMethod===fp);
+    if(fg)a=a.filter(t=>t.gstType===fg);
+    if(fd1)a=a.filter(t=>t.date>=fd1);
+    if(fd2)a=a.filter(t=>t.date<=fd2);
+    if(oo)a=a.filter(t=>t.status==='Pending'&&t.dueDate&&daysLeft(t.dueDate)<0);
+    a.sort((a,b)=>{let va=a[sb],vb=b[sb];if(['amount','taxableAmount'].includes(sb)){va=+va;vb=+vb;}return sd==='asc'?(va>vb?1:-1):(va<vb?1:-1);});
+    return a;
+  },[txns,search,ft,fc,fst,fp,fg,fd1,fd2,oo,sb,sd]);
+
+  const tots=useMemo(()=>({
+    inc:fil.filter(t=>t.type==='Income'&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0),
+    exp:fil.filter(t=>t.type==='Expense'&&t.status!=='Cancelled').reduce((s,t)=>s+t.amount,0),
+    gst:fil.filter(t=>t.status!=='Cancelled').reduce((s,t)=>s+t.gstAmount,0),
+  }),[fil]);
+
+  const pages=Math.ceil(fil.length/PG)||1;
+  const paged=fil.slice((pg-1)*PG,pg*PG);
+  const col=c=>{if(sb===c)ssd(d=>d==='asc'?'desc':'asc');else{ssb(c);ssd('desc');}spg(1);};
+  const aw=c=>sb===c?(sd==='asc'?' ↑':' ↓'):'';
+  const reset=()=>{ss('');sft('');sfc('');sfst('');sfp('');sfg('');sd1('');sd2('');soo(false);spg(1);if(onClearFilter)onClearFilter();};
+
+  const exportX=()=>{
+    const rows=fil.map(t=>({'ID':t.id,'Date':t.date,'Type':t.type,'Category':t.category,'Vendor':t.vendor,'GSTIN':t.vendorGstin,'Description':t.description,'Bill Type':t.gstType,'Taxable Amt':t.taxableAmount,'GST Rate%':t.gstRate,'GST Amt':t.gstAmount,'Total Amt':t.amount,'Method':t.paymentMethod,'Reference':t.referenceNo,'Status':t.status,'Due Date':t.dueDate,'Proof Link':t.proofLink,'Added By':t.addedBy,'Timestamp':t.timestamp}));
+    const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Transactions');
+    XLSX.writeFile(wb,'WeFashion_'+today()+'.xlsx');
+  };
+
+  return(
+    <div>
+      {viewImg&&<ImgViewer src={viewImg} onClose={()=>svi(null)}/>}
+      <div className="sc-hdr">
+        <div><div className="sc-title">Transactions</div><div className="sc-sub">{fil.length} record{fil.length!==1?'s':''}{fil.length!==txns.length?' (filtered from '+txns.length+')':''}</div></div>
+        <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+          <button className="btn bg2" onClick={exportX}>⬇ Export Excel</button>
+          {user&&<button className="btn bp" onClick={onAdd}>+ Add Transaction</button>}
+        </div>
+      </div>
+      <div className="card">
+        <div className="fb">
+          <input type="search" placeholder="🔍  Search vendor, ID, GSTIN..." value={search} onChange={e=>{ss(e.target.value);spg(1);}} style={{flex:1,minWidth:170}}/>
+          <select value={ft} onChange={e=>{sft(e.target.value);spg(1);}}><option value="">All Types</option>{TYPES.map(t=><option key={t}>{t}</option>)}</select>
+          <select value={fc} onChange={e=>{sfc(e.target.value);spg(1);}}><option value="">All Categories</option>{CATS.map(c=><option key={c}>{c}</option>)}</select>
+          <select value={fg} onChange={e=>{sfg(e.target.value);spg(1);}}><option value="">GST / Non-GST</option><option value="GST Bill">GST Bill</option><option value="Non-GST Bill">Non-GST Bill</option></select>
+          <select value={fst} onChange={e=>{sfst(e.target.value);spg(1);}}><option value="">All Status</option>{STATS.map(s=><option key={s}>{s}</option>)}</select>
+          <select value={fp} onChange={e=>{sfp(e.target.value);spg(1);}}><option value="">All Methods</option>{PAY_M.map(m=><option key={m}>{m}</option>)}</select>
+          <input type="date" value={fd1} onChange={e=>{sd1(e.target.value);spg(1);}} style={{width:124}} title="From"/>
+          <input type="date" value={fd2} onChange={e=>{sd2(e.target.value);spg(1);}} style={{width:124}} title="To"/>
+          <label style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'var(--t3)',cursor:'pointer',whiteSpace:'nowrap'}}>
+            <input type="checkbox" checked={oo} onChange={e=>{soo(e.target.checked);spg(1);}}/> Overdue
+          </label>
+          <button className="btn bgh bsm" onClick={reset}>✕ Clear</button>
+        </div>
+        <div className="tb">
+          <span style={{fontSize:10,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.05em'}}>Totals:</span>
+          <div><span className="tbl">Income </span><span className="tbv c-g">{fmtINR(tots.inc)}</span></div>
+          <div><span className="tbl">Expense </span><span className="tbv c-r">{fmtINR(tots.exp)}</span></div>
+          <div><span className="tbl">Net </span><span className="tbv" style={{color:(tots.inc-tots.exp)>=0?'#059669':'#dc2626'}}>{fmtINR(Math.abs(tots.inc-tots.exp))}</span></div>
+          <div><span className="tbl">GST </span><span className="tbv" style={{color:'#5b21b6'}}>{fmtINR(tots.gst)}</span></div>
+          <span style={{marginLeft:'auto',fontSize:11,color:'var(--t3)'}}>Showing {paged.length} of {fil.length}</span>
+        </div>
+        <div style={{overflowX:'auto'}}>
+          <table>
+            <thead><tr>
+              <th>ID</th>
+              <th className="sc" onClick={()=>col('date')}>Date{aw('date')}</th>
+              <th>Type</th>
+              <th className="sc" onClick={()=>col('vendor')}>Vendor{aw('vendor')}</th>
+              <th className="sc" onClick={()=>col('category')}>Category{aw('category')}</th>
+              <th>Bill</th>
+              <th className="sc" onClick={()=>col('taxableAmount')}>Taxable{aw('taxableAmount')}</th>
+              <th>GST</th>
+              <th className="sc" onClick={()=>col('amount')}>Total{aw('amount')}</th>
+              <th>Method</th><th>Status</th><th>Due</th><th>Proof</th>
+              {user&&<th>Actions</th>}
+            </tr></thead>
+            <tbody>
+              {paged.length===0
+                ?<tr><td colSpan={user?14:13} style={{textAlign:'center',padding:40,color:'var(--t3)'}}>No transactions match the filters.</td></tr>
+                :paged.map(t=>{
+                  const isOv=t.status==='Pending'&&t.dueDate&&daysLeft(t.dueDate)<0;
+                  const hasImg=imgs&&imgs[t.id];
+                  return(
+                    <tr key={t.id} className={isOv?'ov':''}>
+                      <td style={{fontSize:10,color:'var(--t3)',fontFamily:'monospace',whiteSpace:'nowrap'}}>{t.id}</td>
+                      <td style={{fontSize:11,color:'var(--t3)',whiteSpace:'nowrap'}}>{t.date}</td>
+                      <td><TB t={t.type}/></td>
+                      <td style={{maxWidth:170}}>
+                        <div style={{fontWeight:500,fontSize:12.5}}>{t.vendor}</div>
+                        {t.vendorGstin&&<div style={{fontSize:10,color:'var(--t3)',fontFamily:'monospace'}}>{t.vendorGstin}</div>}
+                        {t.description&&<div style={{fontSize:10.5,color:'var(--t3)'}}>{t.description.substring(0,32)}{t.description.length>32?'…':''}</div>}
+                      </td>
+                      <td style={{fontSize:12}}>{t.category}</td>
+                      <td><GB g={t.gstType}/></td>
+                      <td style={{fontFamily:'Syne,sans-serif',fontWeight:600,fontSize:12.5}}>{fmtINR(t.taxableAmount)}</td>
+                      <td>{t.gstAmount>0?<span style={{fontSize:11,color:'#5b21b6',fontWeight:500}}>+{fmtINR(t.gstAmount)}<br/><span style={{fontSize:10,fontWeight:400}}>@{t.gstRate}%</span></span>:<span style={{fontSize:11,color:'var(--t3)'}}>—</span>}</td>
+                      <td style={{whiteSpace:'nowrap'}}><span className={t.type==='Income'?'c-g':t.type==='Expense'?'c-r':'c-p'} style={{fontFamily:'Syne,sans-serif',fontSize:12.5}}>{fmtINR(t.amount)}</span></td>
+                      <td style={{fontSize:12}}>{t.paymentMethod}</td>
+                      <td><SB s={t.status}/>{isOv&&<div style={{fontSize:10,color:'#991b1b',marginTop:2}}>⚠ Overdue</div>}</td>
+                      <td><DueLbl d={t.dueDate} s={t.status}/></td>
+                      <td>{hasImg?<button className="linka" onClick={()=>svi(imgs[t.id])}>📷 View</button>:t.proofLink?<a href={t.proofLink} target="_blank" rel="noreferrer" className="linka">View ↗</a>:<span style={{fontSize:11,color:'var(--t3)'}}>—</span>}</td>
+                      {user&&<td>
+                        <div style={{display:'flex',gap:4}}>
+                          <button className="btn bo bxs" onClick={()=>onEdit(t)}>✏</button>
+                          <button className="btn bgh bxs" onClick={()=>onDup(t)} title="Duplicate">⎘</button>
+                          <button className="btn bd bxs" onClick={()=>onDel(t.id)}>🗑</button>
+                        </div>
+                      </td>}
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+        {pages>1&&<div className="pager">
+          <span style={{fontSize:11,color:'var(--t3)',marginRight:7}}>Page {pg} of {pages}</span>
+          <button className="pb" disabled={pg===1} onClick={()=>spg(1)}>«</button>
+          <button className="pb" disabled={pg===1} onClick={()=>spg(p=>p-1)}>‹</button>
+          {Array.from({length:pages},(_,i)=>i+1).filter(p=>Math.abs(p-pg)<=2).map(p=>(
+            <button key={p} className={`pb ${p===pg?'act':''}`} onClick={()=>spg(p)}>{p}</button>
+          ))}
+          <button className="pb" disabled={pg===pages} onClick={()=>spg(p=>p+1)}>›</button>
+          <button className="pb" disabled={pg===pages} onClick={()=>spg(pages)}>»</button>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Reports ─────────────────────────────────────────────── */
+function Reports({txns}){
+  const [tab,st]=useState('pl');
+  const [period,sp]=useState('month');
+  const [month,sm]=useState(today().substring(0,7));
+
+  const filtered=useMemo(()=>{
+    const now=new Date();
+    let a=txns.filter(t=>t.status!=='Cancelled');
+    if(period==='month') return a.filter(t=>t.date.startsWith(month));
+    if(period==='quarter'){const q=Math.floor(now.getMonth()/3);const s=`${now.getFullYear()}-${String(q*3+1).padStart(2,'0')}`;const e=`${now.getFullYear()}-${String(q*3+3).padStart(2,'0')}`;return a.filter(t=>t.date.substring(0,7)>=s&&t.date.substring(0,7)<=e);}
+    if(period==='year') return a.filter(t=>t.date.startsWith(String(now.getFullYear())));
+    return a;
+  },[txns,period,month]);
+
+  const PeriodPicker=()=>(
+    <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:16}}>
+      <div className="rtabs" style={{marginBottom:0}}>
+        {[['month','This Month'],['quarter','This Quarter'],['year','This Year'],['all','All Time']].map(([k,l])=>(
+          <button key={k} className={`rtab ${period===k?'active':''}`} onClick={()=>sp(k)}>{l}</button>
+        ))}
+      </div>
+      {period==='month'&&<input type="month" value={month} onChange={e=>sm(e.target.value)} style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:8,fontSize:13,height:33,fontFamily:'Inter,sans-serif'}}/>}
+    </div>
+  );
+
+  const exportR=()=>{
+    const rows=filtered.map(t=>({'ID':t.id,'Date':t.date,'Type':t.type,'Category':t.category,'Vendor':t.vendor,'GSTIN':t.vendorGstin,'Bill Type':t.gstType,'Taxable':t.taxableAmount,'GST Rate%':t.gstRate,'GST Amt':t.gstAmount,'Total':t.amount,'Method':t.paymentMethod,'Status':t.status}));
+    const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Report');XLSX.writeFile(wb,'WeFashion_Report_'+today()+'.xlsx');
+  };
+
+  const AmtSpan=({v,pos})=>{
+    const cls=v>0&&pos?'c-g':v<0?'c-r':'';
+    return <span className={`plamt ${cls}`}>{v===0?'—':fmtINR(Math.abs(v))}{v<0?' (loss)':''}</span>;
+  };
+  const Row=({lbl,val,cls='',indent=false})=>(
+    <div className={`plr ${cls}`}><span style={indent?{paddingLeft:20,color:'var(--t2)'}:{}}>{lbl}</span><AmtSpan v={val} pos={cls.includes('pos')}/></div>
+  );
+
+  const PLTab=()=>{
+    const t=filtered;
+    const rev=t.filter(x=>x.type==='Income').reduce((s,x)=>s+x.taxableAmount,0);
+    const commI=t.filter(x=>x.type==='Income'&&x.category==='Commission').reduce((s,x)=>s+x.taxableAmount,0);
+    const cogs=t.filter(x=>x.type==='Expense'&&x.category==='Raw Material').reduce((s,x)=>s+x.taxableAmount,0);
+    const gp=rev-cogs;
+    const sal=t.filter(x=>x.type==='Expense'&&x.category==='Salary').reduce((s,x)=>s+x.taxableAmount,0);
+    const rent=t.filter(x=>x.type==='Expense'&&x.category==='Rent').reduce((s,x)=>s+x.taxableAmount,0);
+    const util=t.filter(x=>x.type==='Expense'&&x.category==='Utilities').reduce((s,x)=>s+x.taxableAmount,0);
+    const tran=t.filter(x=>x.type==='Expense'&&x.category==='Transport').reduce((s,x)=>s+x.taxableAmount,0);
+    const maint=t.filter(x=>x.type==='Expense'&&x.category==='Maintenance').reduce((s,x)=>s+x.taxableAmount,0);
+    const commE=t.filter(x=>x.type==='Expense'&&x.category==='Commission').reduce((s,x)=>s+x.taxableAmount,0);
+    const other=t.filter(x=>x.type==='Expense'&&x.category==='Other').reduce((s,x)=>s+x.taxableAmount,0);
+    const opEx=sal+rent+util+tran+maint+commE+other;
+    const opP=gp-opEx;
+    const tax=t.filter(x=>x.type==='Expense'&&x.category==='Tax').reduce((s,x)=>s+x.taxableAmount,0);
+    const netP=opP-tax;
+    return(
+      <div className="card" style={{marginTop:0}}>
+        <div className="ch"><div><div className="ct">Profit & Loss Statement</div><div style={{fontSize:12,color:'var(--t3)'}}>{filtered.length} transactions in period</div></div><button className="btn bg2 bsm" onClick={exportR}>⬇ Export</button></div>
+        <div style={{padding:'14px 18px'}}>
+          <Row lbl="REVENUE" val={0} cls="plhd"/>
+          <Row lbl="Sales income" val={rev-commI} indent/>
+          {commI>0&&<Row lbl="Commission income" val={commI} indent/>}
+          <Row lbl="Total Revenue" val={rev} cls="plsub pos"/>
+          <Row lbl="COST OF GOODS SOLD" val={0} cls="plhd"/>
+          <Row lbl="Raw materials" val={cogs} indent/>
+          <Row lbl="Gross Profit" val={gp} cls={`plsub ${gp>=0?'pos':''}`}/>
+          <Row lbl="OPERATING EXPENSES" val={0} cls="plhd"/>
+          {sal>0&&<Row lbl="Salaries & wages" val={sal} indent/>}
+          {rent>0&&<Row lbl="Rent" val={rent} indent/>}
+          {util>0&&<Row lbl="Utilities" val={util} indent/>}
+          {tran>0&&<Row lbl="Transport" val={tran} indent/>}
+          {maint>0&&<Row lbl="Maintenance" val={maint} indent/>}
+          {commE>0&&<Row lbl="Commission paid" val={commE} indent/>}
+          {other>0&&<Row lbl="Other expenses" val={other} indent/>}
+          <Row lbl="Total Operating Expenses" val={opEx} cls="plsub"/>
+          <Row lbl="Operating Profit" val={opP} cls={`plsub ${opP>=0?'pos':''}`}/>
+          {tax>0&&<Row lbl="Tax & GST payments" val={tax} indent/>}
+          <Row lbl="NET PROFIT / LOSS" val={netP} cls={`pltot ${netP>=0?'pos':''}`}/>
+        </div>
+      </div>
+    );
+  };
+
+  const GSTTab=()=>{
+    const t=filtered;
+    const out={5:0,12:0,18:0,28:0};const inp={5:0,12:0,18:0,28:0};
+    t.filter(x=>x.gstType==='GST Bill'&&x.type==='Income').forEach(x=>{out[x.gstRate]=(out[x.gstRate]||0)+x.gstAmount;});
+    t.filter(x=>x.gstType==='GST Bill'&&x.type==='Expense').forEach(x=>{inp[x.gstRate]=(inp[x.gstRate]||0)+x.gstAmount;});
+    const tO=Object.values(out).reduce((s,v)=>s+v,0);
+    const tI=Object.values(inp).reduce((s,v)=>s+v,0);
+    const net=tO-tI;
+    return(
+      <div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:13,marginBottom:14}}>
+          <div className="card" style={{padding:'17px 19px',textAlign:'center'}}><div className="mc-lbl">Output GST Collected</div><div className="mc-val" style={{color:'#5b21b6',fontSize:20}}>{fmtINR(tO)}</div><div className="mc-sub">Tax on sales</div></div>
+          <div className="card" style={{padding:'17px 19px',textAlign:'center'}}><div className="mc-lbl">Input GST Paid</div><div className="mc-val" style={{color:'#5b21b6',fontSize:20}}>{fmtINR(tI)}</div><div className="mc-sub">Tax on purchases</div></div>
+          <div className="card" style={{padding:'17px 19px',textAlign:'center',border:`2px solid ${net>=0?'#c4b5fd':'#6ee7b7'}`}}><div className="mc-lbl">Net GST {net>=0?'Payable':'Credit'}</div><div className="mc-val" style={{color:net>=0?'#7c3aed':'#059669',fontSize:20}}>{fmtINR(Math.abs(net))}</div><div className="mc-sub">{net>=0?'Pay to Govt':'Credit available'}</div></div>
+        </div>
+        <div className="card"><div className="ch"><div className="ct">GST by rate</div></div>
+          <div style={{overflowX:'auto'}}><table><thead><tr><th>Rate</th><th>Output Tax</th><th>Input Tax</th><th>Net Liability</th></tr></thead>
+            <tbody>{[5,12,18,28].map(r=>(
+              <tr key={r}>
+                <td><span className="badge b-i">@{r}%</span></td>
+                <td style={{fontFamily:'Syne,sans-serif',fontWeight:600,color:'#5b21b6'}}>{fmtINR(out[r])}</td>
+                <td style={{fontFamily:'Syne,sans-serif',fontWeight:600,color:'#5b21b6'}}>{fmtINR(inp[r])}</td>
+                <td><span style={{fontFamily:'Syne,sans-serif',fontWeight:700,color:(out[r]-inp[r])>=0?'#7c3aed':'#059669'}}>{fmtINR(Math.abs(out[r]-inp[r]))}</span></td>
+              </tr>
+            ))}</tbody>
+          </table></div>
+        </div>
+      </div>
+    );
+  };
+
+  const VendorTab=()=>{
+    const map={};
+    filtered.forEach(t=>{
+      if(!map[t.vendor])map[t.vendor]={name:t.vendor,gstin:t.vendorGstin||'',total:0,income:0,expense:0,count:0};
+      map[t.vendor].total+=t.amount;
+      if(t.type==='Income')map[t.vendor].income+=t.amount;else map[t.vendor].expense+=t.amount;
+      map[t.vendor].count++;
+    });
+    const rows=Object.values(map).sort((a,b)=>b.total-a.total);
+    return(
+      <div className="card"><div className="ch"><div className="ct">Vendor Report</div><div style={{fontSize:12,color:'var(--t3)'}}>{rows.length} parties</div></div>
+        <div style={{overflowX:'auto'}}><table><thead><tr><th>Vendor</th><th>GSTIN</th><th>Txns</th><th>Income</th><th>Expense</th><th>Total</th></tr></thead>
+          <tbody>{rows.length===0?<tr><td colSpan={6} style={{textAlign:'center',padding:30,color:'var(--t3)'}}>No data</td></tr>:rows.map(v=>(
+            <tr key={v.name}><td style={{fontWeight:500}}>{v.name}</td><td style={{fontFamily:'monospace',fontSize:11,color:'var(--t3)'}}>{v.gstin||'—'}</td><td>{v.count}</td><td><span className="c-g">{v.income>0?fmtINR(v.income):'—'}</span></td><td><span className="c-r">{v.expense>0?fmtINR(v.expense):'—'}</span></td><td style={{fontFamily:'Syne,sans-serif',fontWeight:700}}>{fmtINR(v.total)}</td></tr>
+          ))}</tbody>
+        </table></div>
+      </div>
+    );
+  };
+
+  return(
+    <div>
+      <div className="sc-hdr"><div><div className="sc-title">Reports</div><div className="sc-sub">P&L · GST summary · Vendor report</div></div><button className="btn bg2" onClick={exportR}>⬇ Export Report</button></div>
+      <div className="rtabs">
+        {[['pl','P&L Statement'],['gst','GST Summary'],['vendor','Vendor Report']].map(([k,l])=>(
+          <button key={k} className={`rtab ${tab===k?'active':''}`} onClick={()=>st(k)}>{l}</button>
+        ))}
+      </div>
+      <PeriodPicker/>
+      {tab==='pl'&&<PLTab/>}
+      {tab==='gst'&&<GSTTab/>}
+      {tab==='vendor'&&<VendorTab/>}
+    </div>
+  );
+}
+
+/* ── Parties ─────────────────────────────────────────────── */
+function Parties({txns,onViewParty}){
+  const parties=useMemo(()=>{
+    const map={};
+    txns.forEach(t=>{
+      if(!map[t.vendor])map[t.vendor]={name:t.vendor,gstin:t.vendorGstin||'',total:0,income:0,expense:0,pending:0,count:0,lastDate:''};
+      const p=map[t.vendor];p.count++;p.total+=t.amount;
+      if(t.type==='Income')p.income+=t.amount;else p.expense+=t.amount;
+      if(t.status==='Pending')p.pending+=t.amount;
+      if(t.date>p.lastDate)p.lastDate=t.date;
+    });
+    return Object.values(map).sort((a,b)=>b.total-a.total);
+  },[txns]);
+
+  if(!parties.length) return <div className="empty"><div style={{fontSize:40,marginBottom:12}}>🏢</div><h3>No parties yet</h3><p>Vendors and clients appear here after you add transactions.</p></div>;
+
+  return(
+    <div>
+      <div className="sc-hdr"><div><div className="sc-title">Parties</div><div className="sc-sub">{parties.length} vendors & clients — click any to see their transactions</div></div></div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(275px,1fr))',gap:11}}>
+        {parties.map((p,i)=>(
+          <div key={p.name} className="party-card" onClick={()=>onViewParty(p.name)}>
+            <div className="party-av" style={{background:COLORS[i%COLORS.length]}}>{initials(p.name)}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.name}</div>
+              {p.gstin&&<div style={{fontSize:10,color:'var(--t3)',fontFamily:'monospace'}}>{p.gstin}</div>}
+              <div style={{fontSize:11.5,color:'var(--t3)',marginTop:2}}>{p.count} transaction{p.count!==1?'s':''} · Last: {p.lastDate}</div>
+            </div>
+            <div style={{textAlign:'right',flexShrink:0}}>
+              <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,color:p.income>p.expense?'#059669':'#dc2626'}}>{fmtINR(p.total)}</div>
+              {p.pending>0&&<div style={{fontSize:11,color:'#92400e'}}>{fmtINR(p.pending)} pending</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Settings ────────────────────────────────────────────── */
+function Settings({txns,notify,onRestore,onDeleteAll}){
+  const [creds,sc]=useState(loadCreds());
+  const [nu,snu]=useState('');
+  const [np,snp]=useState('');
+  const [cp,scp]=useState('');
+  const [credMsg,scm]=useState('');
+  const [showC,ssc]=useState(false);
+  const [delConf,sdc]=useState(false);
+  const fileRef=useRef();
+
+  const saveCred=()=>{
+    if(!nu.trim()&&!np){scm('Enter a new username or password.');return;}
+    if(np&&np.length<8){scm('Password must be 8+ characters.');return;}
+    if(np&&np!==cp){scm('Passwords do not match.');return;}
+    const updated={u:nu.trim()||creds.u,p:np||creds.p};
+    saveCreds(updated);sc(updated);snu('');snp('');scp('');scm('');
+    notify('Credentials updated ✓');
+  };
+
+  const exportBackup=()=>{
+    const blob=new Blob([JSON.stringify({version:'wf-v5',exportedAt:new Date().toISOString(),company:'WeFashion',transactions:txns},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='WeFashion_Backup_'+today()+'.json';a.click();
+    notify('Backup downloaded ✓');
+  };
+
+  const importBackup=e=>{
+    const file=e.target.files[0];if(!file)return;
+    const rd=new FileReader();
+    rd.onload=ev=>{
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(!d.transactions||!Array.isArray(d.transactions))throw new Error('Invalid');
+        if(!window.confirm('Import '+d.transactions.length+' transactions? This replaces all current data.'))return;
+        onRestore(d.transactions);
+      }catch{notify('Invalid backup file','error');}
+    };
+    rd.readAsText(file);e.target.value='';
+  };
+
+  return(
+    <div>
+      <div className="sc-title">Settings</div>
+      <div className="sc-sub">Manage sync, credentials, and data backup.</div>
+
+      <div className="pc">
+        <h3>🔥 Firebase — Auto-Connected</h3>
+        <p style={{fontSize:13,color:'#3730a3',marginBottom:12,lineHeight:1.55}}>Firebase REST API is hardcoded. Every device connects automatically — no setup needed.</p>
+        <div style={{background:'rgba(255,255,255,.7)',border:'1px solid #c7d2fe',borderRadius:9,padding:12,marginBottom:10}}>
+          <div style={{fontSize:11,fontWeight:600,color:'#3730a3',textTransform:'uppercase',letterSpacing:'.04em',marginBottom:6}}>Connected database</div>
+          <div style={{fontSize:12.5,fontFamily:'monospace',color:'#1e40af'}}>wefashion-finance-default-rtdb.asia-southeast1</div>
+          <div style={{fontSize:12,color:'#3730a3',marginTop:5}}>Project: <strong>wefashion-finance</strong> · Polls every 25 seconds</div>
+        </div>
+        <div className="info-box">✅ All devices load live data automatically. Admin changes sync within seconds.</div>
+        <div style={{background:'rgba(255,255,255,.7)',border:'1px solid #c7d2fe',borderRadius:9,padding:12,marginTop:10}}>
+          <div style={{fontSize:12.5,fontWeight:600,color:'#1e40af',marginBottom:8}}>🔧 If sync fails — check these:</div>
+          <div className="ps"><div className="pn">1</div><div style={{fontSize:12.5}}><strong>Firebase Realtime Database created</strong><br/><span style={{color:'var(--t3)'}}>Firebase Console → Build → Realtime Database → create if missing</span></div></div>
+          <div className="ps"><div className="pn">2</div><div style={{fontSize:12.5}}><strong>Database rules allow access</strong><br/><span style={{color:'var(--t3)'}}>Rules tab → set <code className="pill">{'"rules":{".read":true,".write":true}'}</code> → Publish</span></div></div>
+        </div>
+      </div>
+
+      <div className="ss">
+        <h3>🔐 Admin Credentials</h3>
+        <div className="ss-sub">Only the admin can access this page. Change your login details below.</div>
+        <div style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:9,padding:13,marginBottom:13}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+            <span style={{fontSize:10.5,fontWeight:600,color:'var(--t3)',textTransform:'uppercase',letterSpacing:'.04em'}}>Current credentials</span>
+            <button className="btn bgh bxs" onClick={()=>ssc(!showC)}>{showC?'🙈 Hide':'👁 Reveal'}</button>
+          </div>
+          <div style={{fontSize:13,marginBottom:5}}><span style={{color:'var(--t3)',marginRight:8}}>Username:</span>{showC?<strong style={{fontFamily:'monospace'}}>{creds.u}</strong>:<span style={{fontFamily:'monospace',letterSpacing:'.2em',color:'var(--t3)'}}>{'•'.repeat(creds.u.length)}</span>}</div>
+          <div style={{fontSize:13}}><span style={{color:'var(--t3)',marginRight:8}}>Password:</span>{showC?<strong style={{fontFamily:'monospace'}}>{creds.p}</strong>:<span style={{fontFamily:'monospace',letterSpacing:'.2em',color:'var(--t3)'}}>{'•'.repeat(creds.p.length)}</span>}</div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:11,marginBottom:11}}>
+          <div className="fg"><label>New Username</label><input value={nu} onChange={e=>snu(e.target.value)} placeholder={'Current: '+creds.u}/></div>
+          <div/>
+          <div className="fg"><label>New Password</label><input type="password" value={np} onChange={e=>snp(e.target.value)} placeholder="Min 8 characters"/></div>
+          <div className="fg"><label>Confirm Password</label><input type="password" value={cp} onChange={e=>scp(e.target.value)} placeholder="Re-enter password"/></div>
+        </div>
+        {credMsg&&<div style={{background:'#fee2e2',color:'#991b1b',padding:'7px 11px',borderRadius:7,fontSize:13,marginBottom:10}}>{credMsg}</div>}
+        <button className="btn bp" onClick={saveCred}>Update Credentials</button>
+      </div>
+
+      <div className="ss">
+        <h3>💾 Backup & Restore</h3>
+        <div className="ss-sub">Download a JSON backup anytime. Restore on any device. Use alongside Firebase for extra safety.</div>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:8}}>
+          <button className="btn bp" onClick={exportBackup}>⬇ Download Backup ({txns.length} records)</button>
+          <button className="btn bo" onClick={()=>fileRef.current.click()}>⬆ Restore from Backup</button>
+          <input ref={fileRef} type="file" accept=".json" style={{display:'none'}} onChange={importBackup}/>
+        </div>
+        <div className="info-box">💡 After restoring, data is also pushed to Firebase — all devices update automatically.</div>
+      </div>
+
+      <div className="ss" style={{borderColor:'#fecaca'}}>
+        <h3 style={{color:'#991b1b'}}>⚠ Danger Zone</h3>
+        <div className="ss-sub">Permanently delete all records from app and Firebase. Download a backup first.</div>
+        {!delConf
+          ?<button className="btn bd" onClick={()=>sdc(true)}>Delete All Records</button>
+          :<div style={{background:'#fee2e2',border:'1px solid #fecaca',borderRadius:9,padding:12}}>
+            <div style={{fontSize:13,fontWeight:500,color:'#991b1b',marginBottom:9}}>Type <strong>DELETE</strong> to confirm:</div>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <input id="del_inp" placeholder="Type DELETE" style={{padding:'7px 10px',border:'1.5px solid #fca5a5',borderRadius:7,fontSize:13,fontFamily:'monospace',width:130}}/>
+              <button className="btn bd" onClick={()=>{if(document.getElementById('del_inp').value==='DELETE'){onDeleteAll();sdc(false);}else notify('Type DELETE to confirm','error');}}>Confirm</button>
+              <button className="btn bo" onClick={()=>sdc(false)}>Cancel</button>
+            </div>
+          </div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── App ─────────────────────────────────────────────────── */
+function App(){
+  const [user,su]=useState(null);
+  const [view,sv]=useState('dashboard');
+  const [partyFilter,spf]=useState(null);
+  const [txFilter,stf]=useState({});
+  const [txns,st]=useState(()=>ls(CACHE_KEY,[]));
+  const [imgs,si]=useState(()=>ls(IMGS_KEY,{}));
+  const [syncSt,sss]=useState('idle');
+  const [lastSync,sls]=useState('');
+  const [toasts,sto]=useState([]);
+  const [modal,sm]=useState(false);
+  const [editing,se]=useState(null);
+  const [delId,sdel]=useState(null);
+  const [showLogin,ssl]=useState(false);
+  const [sideOpen,sso]=useState(false);
+  const pollRef=useRef(null);
+  const overCnt=txns.filter(t=>t.status==='Pending'&&t.dueDate&&daysLeft(t.dueDate)<0).length;
+
+  const notify=useCallback((msg,type='success')=>{
+    const id=Date.now();
+    sto(p=>[...p,{id,msg,type}]);
+    setTimeout(()=>sto(p=>p.filter(t=>t.id!==id)),3200);
+  },[]);
+
+  const poll=useCallback(async()=>{
+    sss('syncing');
+    try{
+      const data=await fbRead();
+      st(data);lss(CACHE_KEY,data);
+      sss('synced');
+      sls(new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+    }catch(e){
+      console.error('Sync error:',e.message);
+      sss('error');
+    }
+  },[]);
+
+  useEffect(()=>{
+    poll();
+    pollRef.current=setInterval(poll,25000);
+    return()=>clearInterval(pollRef.current);
+  },[]);
+
+  const push=useCallback(async(data)=>{
+    st(data);lss(CACHE_KEY,data);
+    sss('syncing');
+    try{await fbWrite(data);sss('synced');sls(new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));}
+    catch(e){sss('error');notify('Saved locally. Firebase error: '+e.message,'warn');}
+  },[notify]);
+
+  const handleSave=async(tx,imgData)=>{
+    let newTxns;
+    if(editing?.id){
+      newTxns=txns.map(t=>t.id===editing.id?{...tx,id:editing.id,addedBy:editing.addedBy,timestamp:editing.timestamp}:t);
+    } else {
+      newTxns=[{...tx,id:genId(),addedBy:user.username,timestamp:new Date().toISOString()},...txns];
+    }
+    const txId=editing?.id||newTxns[0]?.id;
+    const newImgs={...imgs};
+    if(imgData&&txId)newImgs[txId]=imgData;
+    else if(!imgData&&txId)delete newImgs[txId];
+    si(newImgs);lss(IMGS_KEY,newImgs);
+    sm(false);se(null);
+    await push(newTxns);
+    notify(editing?'Transaction updated ✓':'Transaction added ✓');
+  };
+
+  const handleDel=async id=>{
+    const newImgs={...imgs};delete newImgs[id];
+    si(newImgs);lss(IMGS_KEY,newImgs);
+    sdel(null);
+    await push(txns.filter(t=>t.id!==id));
+    notify('Transaction deleted','error');
+  };
+
+  const openAdd=()=>{se(null);sm(true);sso(false);};
+  const openEdit=tx=>{se(tx);sm(true);};
+  const openDup=tx=>{se({...tx,id:null,date:today(),status:'Pending',referenceNo:'',proofLink:'',timestamp:null});sm(true);notify('Duplicated — update details','warn');};
+
+  const navTo=(p)=>{spf(null);stf({});sv(p);sso(false);};
+  const nowStr=new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const pageTitle={dashboard:'Dashboard',transactions:'Transactions',reports:'Reports',parties:'Parties',settings:'Settings'};
+  const syncLabel={synced:'Live · '+lastSync,syncing:'Syncing...',error:'Sync error — tap to retry',idle:'Connecting...'};
+  const syncDot={synced:'s-ok',syncing:'s-sy',error:'s-er',idle:'s-id'};
+
+  const navItems=[
+    {k:'dashboard',l:'Dashboard',ic:<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>},
+    {k:'transactions',l:'Transactions',ic:<svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>},
+    {k:'reports',l:'Reports',ic:<svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>},
+    {k:'parties',l:'Parties',ic:<svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>},
+  ];
+
+  return(
+    <>
+      {showLogin&&(
+        <div style={{position:'fixed',inset:0,zIndex:500}}>
+          <Login onLogin={u=>{su({username:u});ssl(false);notify('Welcome, '+u+' ✓');}}/>
+          <button onClick={()=>ssl(false)} style={{position:'fixed',top:20,right:20,background:'rgba(255,255,255,.15)',border:'none',color:'#fff',cursor:'pointer',borderRadius:9,padding:'7px 14px',fontSize:13,fontFamily:'Inter,sans-serif'}}>✕ Continue as viewer</button>
+        </div>
+      )}
+
+      <div className={`ovl ${sideOpen?'open':''}`} onClick={()=>sso(false)}/>
+
+      <div className={`sidebar ${sideOpen?'open':''}`}>
+        <div className="logo-wrap">
+          <div className="logo-box">WF</div>
+          <div className="logo-text"><h2>WeFashion</h2><p>Finance Manager</p></div>
+        </div>
+        <div className="snav">
+          <div className="nav-lbl">Navigation</div>
+          {navItems.map(n=>(
+            <div key={n.k} className={`ni ${view===n.k?'active':''}`} onClick={()=>navTo(n.k)}>
+              {n.ic}{n.l}
+              {n.k==='dashboard'&&overCnt>0&&<span className="nbadge">{overCnt}</span>}
+            </div>
+          ))}
+          {user&&<>
+            <div className="nav-lbl" style={{marginTop:8}}>Admin</div>
+            <div className="ni" onClick={openAdd}>
+              <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Add Transaction
+            </div>
+            <div className={`ni ${view==='settings'?'active':''}`} onClick={()=>{sv('settings');sso(false);}}>
+              <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Settings
+            </div>
+          </>}
+        </div>
+        <div className="sb-foot">
+          {user?(
+            <div>
+              <div className="user-pill">
+                <div className="user-av">{user.username[0].toUpperCase()}</div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#fff'}}>{user.username}</div><div style={{fontSize:10,color:'rgba(255,255,255,.35)'}}>Administrator</div></div>
+              </div>
+              <button className="btn bgh bsm" style={{width:'100%',justifyContent:'center',marginTop:7,color:'rgba(255,255,255,.4)',fontSize:12}} onClick={()=>{su(null);sv('dashboard');notify('Logged out');}}>Logout</button>
+            </div>
+          ):(
+            <button className="btn bp" style={{width:'100%',justifyContent:'center',padding:'10px 0'}} onClick={()=>ssl(true)}>
+              <svg style={{width:14,height:14,stroke:'#fff',fill:'none',strokeWidth:1.6}} viewBox="0 0 24 24"><path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+              Admin Login
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="main">
+        <div className="topbar">
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <button className="hamburger" onClick={()=>sso(o=>!o)} aria-label="Menu">
+              <svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <div><div className="tb-title">{pageTitle[view]||'WeFashion'}</div><div className="tb-date">{nowStr}</div></div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <button className="sync-chip" onClick={()=>{clearInterval(pollRef.current);poll();pollRef.current=setInterval(poll,25000);}}>
+              <span className={`sdot ${syncDot[syncSt]||'s-id'}`}/>
+              <span>{syncLabel[syncSt]||'Connecting...'}</span>
+            </button>
+            <span style={{fontSize:12,color:'var(--t3)'}}>{txns.length} records</span>
+            {user?<span className="badge b-i">● Admin</span>:<span className="badge b-gr">● Viewer</span>}
+          </div>
+        </div>
+
+        <div className="content">
+          {view==='dashboard'&&<Dashboard txns={txns} user={user} onAdd={openAdd} onViewPending={()=>{stf({status:'Pending'});sv('transactions');}}/>}
+          {view==='transactions'&&<Transactions txns={txns} imgs={imgs} user={user} onEdit={openEdit} onDel={id=>sdel(id)} onDup={openDup} onAdd={openAdd} initFilter={txFilter} onClearFilter={()=>stf({})}/>}
+          {view==='reports'&&<Reports txns={txns}/>}
+          {view==='parties'&&<Parties txns={txns} onViewParty={name=>{stf({});spf(name);sv('transactions');}}/>}
+          {view==='settings'&&user&&<Settings txns={txns} notify={notify} onRestore={async d=>{await push(d);notify('Restored '+d.length+' records ✓');}} onDeleteAll={async()=>{si({});lss(IMGS_KEY,{});await push([]);notify('All deleted','error');}}/>}
+          {view==='settings'&&!user&&<div className="empty"><div style={{fontSize:40,marginBottom:12}}>🔒</div><h3>Admin access required</h3><p>Login as admin to access settings.</p><button className="btn bp" style={{marginTop:14}} onClick={()=>ssl(true)}>Admin Login</button></div>}
+        </div>
+      </div>
+
+      {modal&&<TxModal tx={editing} onSave={handleSave} onClose={()=>{sm(false);se(null);}}/>}
+
+      {delId&&<div className="ov-c">
+        <div className="conf-card">
+          <h4>Delete transaction?</h4>
+          <p>This permanently removes the record from the app and from Firebase. Cannot be undone.</p>
+          <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+            <button className="btn bo" onClick={()=>sdel(null)}>Cancel</button>
+            <button className="btn bd" onClick={()=>handleDel(delId)}>Delete</button>
+          </div>
+        </div>
+      </div>}
+
+      <Toasts items={toasts}/>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
